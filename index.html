@@ -8,37 +8,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
     body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #000; }
-    #overlay {
-      position: absolute; top: 10px; left: 10px; z-index: 10;
-      color: white; text-shadow: 1px 1px 2px black;
-      pointer-events: none;
-    }
-    #start-button {
-      pointer-events: auto;
-      padding: 15px 30px; font-size: 18px;
-      background-color: #4CAF50; color: white;
-      border: none; border-radius: 5px; cursor: pointer;
-    }
-    #game-ui {
-      position: absolute; bottom: 20px; left: 0; right: 0;
-      display: flex; justify-content: center;
-      z-index: 10; pointer-events: none;
-    }
-    .button {
-      background-color: rgba(0,0,0,0.7);
-      color: white; border: 2px solid #4CAF50;
-      padding: 10px 15px; border-radius: 5px;
-      margin: 0 10px; cursor: pointer;
-      pointer-events: auto; font-size: 16px;
-      transition: opacity 0.2s;
-    }
-    #game-info {
-      position: absolute; top: 10px; right: 10px;
-      background-color: rgba(0,0,0,0.6);
-      color: white; padding: 10px; border-radius: 5px;
-      font-size: 14px; z-index: 10;
-      pointer-events: none;
-    }
+    #overlay { position: absolute; top: 10px; left: 10px; z-index: 10; color: white; text-shadow: 1px 1px 2px black; pointer-events: none; }
+    #start-button { pointer-events: auto; padding: 15px 30px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.2s; }
+    #start-button:hover { background-color: #45a049; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+    #start-button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    #game-ui { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 10; pointer-events: none; }
+    .button { background-color: rgba(0,0,0,0.7); color: white; border: 2px solid #4CAF50; padding: 10px 15px; border-radius: 5px; margin: 0 10px; cursor: pointer; pointer-events: auto; font-size: 16px; transition: all 0.2s; }
+    .button:hover:not([disabled]) { background-color: rgba(0,0,0,0.9); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    .button:active:not([disabled]) { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .button[disabled] { opacity: 0.5; cursor: not-allowed; }
+    #game-info { position: absolute; top: 10px; right: 10px; background-color: rgba(0,0,0,0.6); color: white; padding: 10px; border-radius: 5px; font-size: 14px; z-index: 10; pointer-events: none; }
+    #battle-log { position: absolute; top: 100px; right: 10px; width: 200px; background-color: rgba(0,0,0,0.6); color: white; padding: 10px; border-radius: 5px; font-size: 14px; z-index: 10; pointer-events: none; max-height: 150px; overflow-y: auto; }
+    #battle-log p { margin: 5px 0; }
+    #tutorial { position: absolute; bottom: 80px; left: 0; right: 0; background-color: rgba(0,0,0,0.7); color: white; padding: 15px; font-size: 16px; text-align: center; transition: opacity 0.5s; }
+    .hp-bar { height: 6px; background-color: #4CAF50; margin-top: 3px; transition: width 0.5s; }
+    .type-icon { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    .pulse { animation: pulse 1.5s infinite; }
   </style>
 </head>
 <body>
@@ -46,270 +32,542 @@
     <button id="start-button">Start AR Battle</button>
   </div>
   <div id="game-ui" style="display:none;">
-    <button class="button" id="attack-button">Attack</button>
-    <button class="button" id="special-button">Special Move</button>
-    <button class="button" id="end-turn-button">End Turn</button>
+    <button class="button" id="attack-button" disabled>Attack</button>
+    <button class="button" id="special-button" disabled>Special Move</button>
+    <button class="button" id="end-turn-button" disabled>End Turn</button>
   </div>
   <div id="game-info" style="display:none;">
-    <div>Player HP: <span id="player-hp">100</span></div>
-    <div>Enemy HP: <span id="enemy-hp">100</span></div>
-    <div>Turn: <span id="turn-counter">1</span></div>
+    <div>Player: <span id="player-name">Card</span> <span id="player-type-icon" class="type-icon"></span></div>
+    <div>HP: <span id="player-hp">100</span>/100 <div class="hp-bar" id="player-hp-bar" style="width: 100%"></div></div>
+    <div style="margin-top: 10px;">Enemy: <span id="enemy-name">Card</span> <span id="enemy-type-icon" class="type-icon"></span></div>
+    <div>HP: <span id="enemy-hp">100</span>/100 <div class="hp-bar" id="enemy-hp-bar" style="width: 100%"></div></div>
+    <div style="margin-top: 10px;">Turn: <span id="turn-counter">1</span> (<span id="turn-indicator">Your Turn</span>)</div>
+  </div>
+  <div id="battle-log" style="display:none;"></div>
+  <div id="tutorial" style="display:none;">
+    Place your cards on a flat surface in front of you.
+    <br>Touch anywhere to dismiss.
   </div>
 
   <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+    import { TextGeometry } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/geometries/TextGeometry.js';
+    import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FontLoader.js';
 
     let camera, scene, renderer;
     let clock = new THREE.Clock();
-    let reticle;
-    let hitTestSource = null, viewerSpace = null;
-    let localReferenceSpace = null;
     let playerCard, enemyCard;
     let playerCardData, enemyCardData;
     let playerHP = 100, enemyHP = 100;
-    let currentTurn = 1, isPlayerTurn = true, attackInProgress = false;
+    let currentTurn = 1, isPlayerTurn = true, attackOccurred = false;
     let gameStarted = false;
-    let playerCardPosition = new THREE.Vector3(), enemyCardPosition = new THREE.Vector3();
+    let playerAttackParticles, enemyAttackParticles;
+    let battleField, arSessionStarted = false;
+    let controller, reticle, hitTestSource = null, hitTestSourceRequested = false;
+    let xrSessionActive = false;
+    let font;
+    let damageTexts = [];
 
+    // Card positions
+    const playerCardPosition = new THREE.Vector3(-0.15, 0, -0.5);
+    const enemyCardPosition  = new THREE.Vector3( 0.15, 0, -0.5);
+
+    // Type effectiveness chart
+    const typeEffectiveness = {
+      Fire:     { Water: 0.5, Grass: 2.0, Fire: 1.0, Electric: 1.0 },
+      Water:    { Fire: 2.0, Grass: 0.5, Water: 1.0, Electric: 0.5 },
+      Grass:    { Fire: 0.5, Water: 2.0, Grass: 1.0, Electric: 1.0 },
+      Electric: { Water: 2.0, Grass: 0.5, Fire: 1.0, Electric: 1.0 }
+    };
+
+    // Card definitions
     const cardTypes = [
-      { name: "Flameon", type: "Fire", attack: 15, defense: 5, special: "Flame Burst", specialDamage: 25, color: 0xff5500, particleColor: 0xff3300 },
-      { name: "Aquara", type: "Water", attack: 12, defense: 8, special: "Tidal Wave", specialDamage: 22, color: 0x0066ff, particleColor: 0x00ccff },
-      { name: "Leafix", type: "Grass", attack: 10, defense: 10, special: "Vine Whip", specialDamage: 20, color: 0x33cc33, particleColor: 0x99ff66 },
-      { name: "Zapdos", type: "Electric", attack: 18, defense: 3, special: "Thunder Strike", specialDamage: 30, color: 0xffcc00, particleColor: 0xffff00 }
+      { name: 'Flameon', type: 'Fire',     attack: 15, defense: 5,  special: 'Flame Burst',   specialDamage: 25, color: 0xff5500, particleColor: 0xff3300 },
+      { name: 'Aquara',  type: 'Water',    attack: 12, defense: 8,  special: 'Tidal Wave',    specialDamage: 22, color: 0x0066ff, particleColor: 0x00ccff },
+      { name: 'Leafix',  type: 'Grass',    attack: 10, defense: 10, special: 'Vine Whip',     specialDamage: 20, color: 0x33cc33, particleColor: 0x99ff66 },
+      { name: 'Zapdos',  type: 'Electric', attack: 18, defense: 3,  special: 'Thunder Strike',specialDamage: 30, color: 0xffcc00, particleColor: 0xffff00 }
     ];
+
+    // Preload font for damage texts
+    new FontLoader().load(
+      'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
+      f => { font = f; }
+    );
 
     init();
 
     function init() {
-      scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      scene    = new THREE.Scene();
+      camera   = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false, logarithmicDepthBuffer: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
       document.body.appendChild(renderer.domElement);
 
-      // Lighting
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.5));
       const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
       dirLight.position.set(0,5,5);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.set(1024,1024);
       scene.add(dirLight);
 
-      // Reticle for placement
-      const ring = new THREE.RingGeometry(0.1, 0.12, 32).rotateX(-Math.PI/2);
-      const mat = new THREE.MeshBasicMaterial({ color: 0x0fff00 });
-      reticle = new THREE.Mesh(ring, mat);
+      reticle = createReticle();
       reticle.visible = false;
       scene.add(reticle);
 
-      // UI listeners
+      battleField = createBattleField();
+      battleField.visible = false;
+      scene.add(battleField);
+
       document.getElementById('start-button').addEventListener('click', startARSession);
       document.getElementById('attack-button').addEventListener('click', performAttack);
       document.getElementById('special-button').addEventListener('click', performSpecialAttack);
       document.getElementById('end-turn-button').addEventListener('click', endTurn);
+      document.getElementById('tutorial').addEventListener('click', () => {
+        document.getElementById('tutorial').style.display = 'none';
+      });
       window.addEventListener('resize', onWindowResize);
     }
 
+    function createReticle() {
+      const ring    = new THREE.RingGeometry(0.045,0.05,32);
+      const mat     = new THREE.MeshBasicMaterial({ color:0x0099ff, opacity:0.8, transparent:true, side:THREE.DoubleSide });
+      const mesh    = new THREE.Mesh(ring, mat);
+      mesh.rotation.x = -Math.PI/2;
+
+      const lineMat = new THREE.LineBasicMaterial({ color:0x0099ff });
+      const hGeo    = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute([-0.03,0,0, 0.03,0,0],3));
+      const vGeo    = new THREE.BufferGeometry().setAttribute('position', new THREE.Float32BufferAttribute([0,-0.03,0, 0,0.03,0],3));
+      const hLine   = new THREE.Line(hGeo, lineMat);
+      const vLine   = new THREE.Line(vGeo, lineMat);
+
+      const group = new THREE.Group();
+      group.add(mesh, hLine, vLine);
+      group.matrixAutoUpdate = false;
+      return group;
+    }
+
+    function createBattleField() {
+      const group = new THREE.Group();
+      // Platform
+      const platGeo   = new THREE.CylinderGeometry(0.5,0.55,0.02,32);
+      const platMat   = new THREE.MeshPhongMaterial({ color:0x333333, transparent:true, opacity:0.8, shininess:80 });
+      const platform  = new THREE.Mesh(platGeo,platMat);
+      platform.position.y = -0.01; platform.receiveShadow = true;
+      group.add(platform);
+      // Glow ring
+      const ringGeo = new THREE.TorusGeometry(0.5,0.01,16,32);
+      const ringMat = new THREE.MeshBasicMaterial({ color:0x00ffff, transparent:true, opacity:0.6 });
+      const ring    = new THREE.Mesh(ringGeo,ringMat);
+      ring.rotation.x = Math.PI/2; ring.position.y = 0.005;
+      group.add(ring);
+      // Card platforms
+      const pPlat = createCardPlatform(0x0066ff), ePlat = createCardPlatform(0xff3300);
+      pPlat.position.set(-0.15,0,0); ePlat.position.set(0.15,0,0);
+      group.add(pPlat,ePlat);
+      // Ambient particles
+      const count = 100;
+      const posArr = new Float32Array(count*3);
+      const velArr = [];
+      for(let i=0;i<count;i++){
+        const r = 0.5*Math.sqrt(Math.random());
+        const t = Math.random()*2*Math.PI;
+        posArr[i*3+0] = r*Math.cos(t);
+        posArr[i*3+1] = Math.random()*0.3;
+        posArr[i*3+2] = r*Math.sin(t);
+        velArr.push({ y: Math.random()*0.01 + 0.005 });
+      }
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.BufferAttribute(posArr,3));
+      const pMat = new THREE.PointsMaterial({ color:0x88ccff, size:0.01, transparent:true, opacity:0.6, sizeAttenuation:true });
+      const pts  = new THREE.Points(pGeo,pMat);
+      pts.userData.velocities = velArr;
+      group.add(pts);
+      group.userData.particles = pts;
+      return group;
+    }
+
+    function createCardPlatform(color) {
+      const g = new THREE.Group();
+      const geo = new THREE.CylinderGeometry(0.12,0.13,0.01,16);
+      const m = new THREE.MeshPhongMaterial({ color:0x222222, shininess:30 });
+      const plat = new THREE.Mesh(geo,m); plat.receiveShadow = true;
+      g.add(plat);
+      const ringGeo = new THREE.TorusGeometry(0.12,0.005,8,32);
+      const ringMat = new THREE.MeshBasicMaterial({ color, transparent:true, opacity:0.8 });
+      const ring    = new THREE.Mesh(ringGeo,ringMat);
+      ring.rotation.x= Math.PI/2; ring.position.y=0.006;
+      g.add(ring);
+      return g;
+    }
+
     function startARSession() {
-      if (!navigator.xr) return alert('WebXR not supported');
-      navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-        if (!supported) return alert('AR not supported');
+      if (!navigator.xr) { alert('WebXR not supported'); return; }
+      navigator.xr.isSessionSupported('immersive-ar').then(supported => {
+        if (!supported) { alert('AR not supported'); return; }
         navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['hit-test'],
-          optionalFeatures: ['dom-overlay'],
-          domOverlay: { root: document.body }
+          requiredFeatures:['hit-test'], optionalFeatures:['dom-overlay'], domOverlay:{ root:document.body }
         }).then(onSessionStarted);
       });
     }
 
     function onSessionStarted(session) {
+      xrSessionActive   = true;
+      arSessionStarted  = true;
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);
-      localReferenceSpace = renderer.xr.getReferenceSpace();
-
-      // Set up hit-test source
-      session.requestReferenceSpace('viewer').then((ref) => {
-        viewerSpace = ref;
-        session.requestHitTestSource({ space: viewerSpace }).then((source) => {
-          hitTestSource = source;
-        });
-      });
-
-      session.addEventListener('select', onSelect);
+      document.getElementById('overlay').style.display    = 'none';
+      document.getElementById('tutorial').style.display   = 'block';
+      controller = renderer.xr.getController(0);
+      controller.addEventListener('select', onSelect);
+      scene.add(controller);
       session.addEventListener('end', () => {
-        hitTestSource = null;
-        gameStarted = false;
-        document.getElementById('overlay').style.display = '';
-        document.getElementById('start-button').style.display = '';
-        document.getElementById('game-ui').style.display = 'none';
-        document.getElementById('game-info').style.display = 'none';
+        xrSessionActive = false; arSessionStarted = false; gameStarted = false;
+        ['overlay','game-ui','game-info','battle-log','tutorial'].forEach(id => document.getElementById(id).style.display = '');
+        hitTestSourceRequested = false; hitTestSource = null;
         renderer.setAnimationLoop(null);
       });
-
-      // Update UI
-      document.getElementById('start-button').style.display = 'none';
-      document.getElementById('overlay').innerHTML = '<div>Tap the screen to place cards</div>';
       renderer.setAnimationLoop(render);
     }
 
     function onSelect() {
-      if (reticle.visible && !gameStarted) {
-        // Define card positions based on reticle
-        playerCardPosition.copy(reticle.position).add(new THREE.Vector3(-0.1, 0, 0));
-        enemyCardPosition.copy(reticle.position).add(new THREE.Vector3(0.1, 0, 0));
-
+      if (reticle.visible && !battleField.visible) {
+        battleField.position.setFromMatrixPosition(reticle.matrix);
+        battleField.visible = true; reticle.visible = false;
+        ['game-ui','game-info','battle-log'].forEach(id => document.getElementById(id).style.display = id==='game-ui'?'flex':'block');
+        document.getElementById('tutorial').style.display='none';
         initGame();
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('game-ui').style.display = 'flex';
-        document.getElementById('game-info').style.display = 'block';
-        gameStarted = true;
+      } else if (document.getElementById('tutorial').style.display==='block') {
+        document.getElementById('tutorial').style.display='none';
       }
     }
 
     function initGame() {
-      // Random card selection
-      playerCardData = cardTypes[Math.floor(Math.random() * cardTypes.length)];
-      do {
-        enemyCardData = cardTypes[Math.floor(Math.random() * cardTypes.length)];
-      } while (enemyCardData.name === playerCardData.name);
-
-      playerHP = 100;
-      enemyHP = 100;
-      currentTurn = 1;
-      isPlayerTurn = true;
-      attackInProgress = false;
+      cleanUpGame();
+      playerCardData = cardTypes[Math.floor(Math.random()*cardTypes.length)];
+      do { enemyCardData = cardTypes[Math.floor(Math.random()*cardTypes.length)]; }
+      while (enemyCardData.name===playerCardData.name);
+      playerHP=100; enemyHP=100; currentTurn=1; isPlayerTurn=true; attackOccurred=false; gameStarted=true;
+      document.getElementById('player-name').textContent = playerCardData.name;
+      document.getElementById('enemy-name').textContent  = enemyCardData.name;
+      document.getElementById('player-type-icon').style.backgroundColor = `#${playerCardData.color.toString(16).padStart(6,'0')}`;
+      document.getElementById('enemy-type-icon').style.backgroundColor  = `#${enemyCardData.color.toString(16).padStart(6,'0')}`;
       updateGameInfo();
-
-      createCards();
+      // Create 3D cards
+      const pPos = playerCardPosition.clone().add(battleField.position).setY( battleField.position.y+0.1 );
+      const ePos = enemyCardPosition.clone().add(battleField.position).setY( battleField.position.y+0.1 );
+      playerCard = createCard(playerCardData, pPos, true);
+      enemyCard  = createCard(enemyCardData,  ePos, false);
       createAttackParticles();
+      logBattleEvent(`Battle starts! ${playerCardData.name} vs ${enemyCardData.name}`);
+      logBattleEvent(`Your turn! Choose your move.`);
     }
 
-    function createCards() {
-      if (playerCard) scene.remove(playerCard);
-      if (enemyCard) scene.remove(enemyCard);
-      playerCard = createCard(playerCardData, playerCardPosition, true);
-      enemyCard = createCard(enemyCardData, enemyCardPosition, false);
+    function cleanUpGame() {
+      if(playerCard) scene.remove(playerCard);
+      if(enemyCard)  scene.remove(enemyCard);
+      ['p1','p2'].forEach(n => { const o=scene.getObjectByName(n); if(o) scene.remove(o); });
+      damageTexts.forEach(t => scene.remove(t));
+      damageTexts = [];
+      document.getElementById('battle-log').innerHTML = '';
     }
 
     function createCard(data, position, isPlayer) {
-      const card = new THREE.Group();
-      // Base
-      const geo = new THREE.BoxGeometry(0.2, 0.3, 0.01);
-      const mat = new THREE.MeshPhongMaterial({ color: data.color, transparent: true, opacity: 0.9 });
-      const mesh = new THREE.Mesh(geo, mat);
-      card.add(mesh);
-      // Border
-      const border = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.32, 0.005), new THREE.MeshPhongMaterial({ color: 0xffd700, transparent: true, opacity: 0.7 }));
-      border.position.z = -0.01;
-      card.add(border);
-      // Character sphere
-      const charMesh = new THREE.Mesh(new THREE.SphereGeometry(0.05, 16, 16), new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: data.color, emissiveIntensity: 0.5 }));
-      charMesh.position.z = 0.03;
-      card.add(charMesh);
-      // Text labels
-      function makeLabel(text, fontSize, yOffset) {
-        const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64;
-        const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.font = `bold ${fontSize}px Arial`;
-        ctx.textAlign = 'center'; ctx.fillText(text, 128, 40);
-        const tx = new THREE.CanvasTexture(cv);
-        const pl = new THREE.PlaneGeometry(0.15, fontSize/256 * 0.04);
-        const ml = new THREE.MeshBasicMaterial({ map: tx, transparent: true });
-        const mesh = new THREE.Mesh(pl, ml);
-        mesh.position.set(0, yOffset, 0.02);
-        return mesh;
-      }
-      card.add(makeLabel(data.name, 32, 0.12));
-      card.add(makeLabel(`${data.type} | ATK: ${data.attack}`, 24, -0.12));
+      const group = new THREE.Group();
+      const baseGeo = new THREE.BoxGeometry(0.2,0.3,0.01);
+      const baseMat = new THREE.MeshPhongMaterial({ color:data.color, transparent:true, opacity:0.9, shininess:90 });
+      const base    = new THREE.Mesh(baseGeo,baseMat); base.castShadow=true; base.receiveShadow=true; group.add(base);
+      const borderGeo = new THREE.BoxGeometry(0.22,0.32,0.005);
+      const borderMat = new THREE.MeshPhongMaterial({ color:0xffd700, transparent:true, opacity:0.9, emissive:0xffd700, emissiveIntensity:0.3 });
+      const border  = new THREE.Mesh(borderGeo,borderMat); border.position.z=-0.01; border.castShadow=true; group.add(border);
+      const charGeo = new THREE.SphereGeometry(0.05,32,32);
+      const charMat = new THREE.MeshPhongMaterial({ color:0xffffff, emissive:data.color, emissiveIntensity:0.5, shininess:100 });
+      const char    = new THREE.Mesh(charGeo,charMat); char.position.z=0.03; char.castShadow=true; group.add(char);
+      const glowGeo = new THREE.SphereGeometry(0.055,32,32);
+      const glowMat = new THREE.MeshBasicMaterial({ color:data.color, transparent:true, opacity:0.3, side:THREE.BackSide });
+      const glow    = new THREE.Mesh(glowGeo,glowMat); glow.position.copy(char.position); group.add(glow);
+      addCardLabels(group, data);
+      group.position.copy(position);
+      if (isPlayer) group.rotation.y = Math.PI;
+      group.userData = { ...data, floatAnimation:{ startY:position.y, speed:isPlayer?2:2.2, phase:isPlayer?0:Math.PI } };
+      scene.add(group);
+      return group;
+    }
 
-      card.position.copy(position);
-      if (isPlayer) card.rotation.y = Math.PI;
-      card.userData = data;
-      scene.add(card);
-      return card;
+    function addCardLabels(group, data) {
+      function createTextTexture(text, fontSize, w, h) {
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(0,0,0,0.7)';
+        ctx.beginPath();
+        ctx.roundRect(0,0,w,h,10);
+        ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign='center';
+        ctx.textBaseline='middle';
+        ctx.fillText(text, w/2, h/2);
+        return new THREE.CanvasTexture(canvas);
+      }
+      const nameTex = createTextTexture(data.name,24,256,64);
+      const nameMat = new THREE.MeshBasicMaterial({ map:nameTex, transparent:true });
+      const nameMesh= new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.04), nameMat);
+      nameMesh.position.set(0,0.12,0.02);
+      group.add(nameMesh);
+
+      const stats = `${data.type} | ATK:${data.attack} | DEF:${data.defense}`;
+      const statsTex = createTextTexture(stats,18,256,48);
+      const statsMat = new THREE.MeshBasicMaterial({ map:statsTex, transparent:true });
+      const statsMesh= new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.03), statsMat);
+      statsMesh.position.set(0,-0.12,0.02);
+      group.add(statsMesh);
+
+      const specTex = createTextTexture(data.special,16,256,40);
+      const specMat = new THREE.MeshBasicMaterial({ map:specTex, transparent:true });
+      const specMesh= new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.025), specMat);
+      specMesh.position.set(0,-0.08,0.02);
+      group.add(specMesh);
     }
 
     function createAttackParticles() {
-      if (scene.getObjectByName('p1')) scene.remove(scene.getObjectByName('p1'));
-      if (scene.getObjectByName('p2')) scene.remove(scene.getObjectByName('p2'));
-
-      playerAttackParticles = makeParticleSystem(playerCardData.particleColor, 'p1');
-      enemyAttackParticles = makeParticleSystem(enemyCardData.particleColor, 'p2');
+      ['p1','p2'].forEach(n => { const o=scene.getObjectByName(n); if(o) scene.remove(o); });
+      playerAttackParticles = makeParticles(playerCardData.particleColor,'p1');
+      enemyAttackParticles  = makeParticles(enemyCardData.particleColor,'p2');
       scene.add(playerAttackParticles, enemyAttackParticles);
     }
 
-    function makeParticleSystem(colorHex, name) {
-      const geom = new THREE.BufferGeometry();
+    function makeParticles(colorHex,name) {
       const count = 100;
+      const geo = new THREE.BufferGeometry();
       const pos = new Float32Array(count*3);
-      const cols = new Float32Array(count*3);
-      const sz = new Float32Array(count);
-      const c = new THREE.Color(colorHex);
-      for (let i=0; i<count; i++) {
-        pos.set([0,0,0], i*3);
-        cols.set([c.r, c.g, c.b], i*3);
-        sz[i] = Math.random()*0.02 + 0.01;
+      const col = new Float32Array(count*3);
+      const sz  = new Float32Array(count);
+      const c   = new THREE.Color(colorHex);
+      for(let i=0;i<count;i++){
+        pos[i*3]=pos[i*3+1]=pos[i*3+2]=0;
+        col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b;
+        sz[i] = Math.random()*0.02+0.01;
       }
-      geom.setAttribute('position', new THREE.BufferAttribute(pos,3));
-      geom.setAttribute('color', new THREE.BufferAttribute(cols,3));
-      geom.setAttribute('size', new THREE.BufferAttribute(sz,1));
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      geo.setAttribute('color',    new THREE.BufferAttribute(col,3));
+      geo.setAttribute('size',     new THREE.BufferAttribute(sz,1));
+
       const mat = new THREE.ShaderMaterial({
-        uniforms: { pointTexture: { value: new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png') } },
-        vertexShader: `attribute float size; varying vec3 vColor; void main(){ vColor=color; vec4 mv=modelViewMatrix*vec4(position,1.0); gl_PointSize=size*(300.0/-mv.z); gl_Position=projectionMatrix*mv; }`,
-        fragmentShader: `uniform sampler2D pointTexture; varying vec3 vColor; void main(){ gl_FragColor=vec4(vColor,1.0)*texture2D(pointTexture,gl_PointCoord); if(gl_FragColor.a<0.3) discard; }`,
-        blending: THREE.AdditiveBlending, depthTest: true, transparent: true, vertexColors: true
+        uniforms: { time:{value:0}, pointTexture:{value:new THREE.TextureLoader().load('https://threejs.org/examples/textures/sprites/disc.png')} },
+        vertexShader: `
+          attribute float size;
+          attribute vec3 color;
+          varying vec3 vColor;
+          uniform float time;
+          void main(){
+            vColor = color;
+            vec4 mvPos = modelViewMatrix * vec4(position,1.0);
+            gl_PointSize = size * (300.0 / -mvPos.z);
+            gl_Position = projectionMatrix * mvPos;
+          }
+        `,
+        fragmentShader: `
+          uniform sampler2D pointTexture;
+          varying vec3 vColor;
+          void main(){
+            gl_FragColor = vec4(vColor,1.0) * texture2D(pointTexture, gl_PointCoord);
+          }
+        `,
+        transparent: true,
+        vertexColors: true,
+        name
       });
-      const pts = new THREE.Points(geom, mat);
-      pts.name = name;
-      pts.visible = false;
-      return pts;
+
+      const particles = new THREE.Points(geo, mat);
+      particles.name = name;
+      particles.visible = false;
+      return particles;
     }
 
-    function performAttack() { /* same as before, using card data & particles */ }
-    function performSpecialAttack() { /* same as before */ }
-    function animateAttack(card, particles, start, end, onDone) { /* same as before */ }
-    function enemyAttack() { /* same as before */ }
-    function endTurn() { if (!isPlayerTurn||attackInProgress) return; isPlayerTurn=false; updateGameInfo(); setTimeout(enemyAttack, 1000); }
-    function endEnemyTurn() { isPlayerTurn=true; currentTurn++; updateGameInfo(); }
-    function calculateDamage(atk, def) { const m=0.8+Math.random()*0.4; return Math.max(1, Math.floor((atk-def/2)*m)); }
+    function performAttack() {
+      if (!gameStarted || !isPlayerTurn) return;
+      attackOccurred = true;
+      document.getElementById('attack-button').disabled  = true;
+      document.getElementById('special-button').disabled = true;
+      const mult = typeEffectiveness[playerCardData.type][enemyCardData.type] || 1;
+      let dmg = Math.round(playerCardData.attack*mult - enemyCardData.defense);
+      if (dmg < 1) dmg = 1;
+      enemyHP = Math.max(enemyHP - dmg, 0);
+      showAttackAnimation(playerAttackParticles, playerCard.position, enemyCard.position);
+      showDamageText(dmg, enemyCard.position.clone());
+      logBattleEvent(`${playerCardData.name} used Attack! It dealt ${dmg} damage.`);
+      updateGameInfo();
+      if (enemyHP <= 0) {
+        logBattleEvent(`Enemy ${enemyCardData.name} fainted! You win!`);
+        gameStarted = false;
+      } else {
+        document.getElementById('end-turn-button').disabled = false;
+      }
+    }
+
+    function performSpecialAttack() {
+      if (!gameStarted || !isPlayerTurn) return;
+      attackOccurred = true;
+      document.getElementById('attack-button').disabled  = true;
+      document.getElementById('special-button').disabled = true;
+      const mult = typeEffectiveness[playerCardData.type][enemyCardData.type] || 1;
+      let dmg = Math.round(playerCardData.specialDamage*mult - enemyCardData.defense);
+      if (dmg < 1) dmg = 1;
+      enemyHP = Math.max(enemyHP - dmg, 0);
+      showAttackAnimation(playerAttackParticles, playerCard.position, enemyCard.position);
+      showDamageText(dmg, enemyCard.position.clone());
+      logBattleEvent(`${playerCardData.name} used ${playerCardData.special}! It dealt ${dmg} damage.`);
+      updateGameInfo();
+      if (enemyHP <= 0) {
+        logBattleEvent(`Enemy ${enemyCardData.name} fainted! You win!`);
+        gameStarted = false;
+      } else {
+        document.getElementById('end-turn-button').disabled = false;
+      }
+    }
+
+    function endTurn() {
+      if (!attackOccurred) return;
+      attackOccurred = false;
+      document.getElementById('end-turn-button').disabled = true;
+      isPlayerTurn = false;
+      currentTurn++;
+      updateGameInfo();
+      logBattleEvent("Enemy's turn!");
+      setTimeout(enemyMove, 1000);
+    }
+
+    function enemyMove() {
+      if (!gameStarted) return;
+      const useSpec = Math.random() < 0.3;
+      const moveName = useSpec ? enemyCardData.special : 'Attack';
+      const baseDmg  = useSpec ? enemyCardData.specialDamage : enemyCardData.attack;
+      const mult = typeEffectiveness[enemyCardData.type][playerCardData.type] || 1;
+      let dmg = Math.round(baseDmg*mult - playerCardData.defense);
+      if (dmg < 1) dmg = 1;
+      playerHP = Math.max(playerHP - dmg, 0);
+      showAttackAnimation(enemyAttackParticles, enemyCard.position, playerCard.position);
+      showDamageText(dmg, playerCard.position.clone());
+      logBattleEvent(`${enemyCardData.name} used ${moveName}! It dealt ${dmg} damage.`);
+      updateGameInfo();
+      if (playerHP <= 0) {
+        logBattleEvent(`Your ${playerCardData.name} fainted! You lose!`);
+        gameStarted = false;
+        return;
+      }
+      setTimeout(() => {
+        isPlayerTurn = true;
+        updateGameInfo();
+        logBattleEvent("Your turn!");
+      }, 1000);
+    }
+
+    function showAttackAnimation(particles, fromPos, toPos) {
+      particles.position.copy(fromPos);
+      particles.visible = true;
+      setTimeout(() => { particles.visible = false; }, 600);
+    }
+
+    function showDamageText(amount, pos) {
+      if (!font) return;
+      const geo = new TextGeometry(`${amount}`, { font, size:0.05, height:0.005 });
+      geo.computeBoundingBox();
+      const mat = new THREE.MeshBasicMaterial({ color:0xff0000 });
+      const txt = new THREE.Mesh(geo, mat);
+      const w = geo.boundingBox.max.x - geo.boundingBox.min.x;
+      txt.position.copy(pos).add(new THREE.Vector3(-w/2, 0.1, 0));
+      scene.add(txt);
+      damageTexts.push(txt);
+    }
 
     function updateGameInfo() {
       document.getElementById('player-hp').textContent = playerHP;
-      document.getElementById('enemy-hp').textContent = enemyHP;
+      document.getElementById('enemy-hp').textContent  = enemyHP;
+      document.getElementById('player-hp-bar').style.width = `${playerHP}%`;
+      document.getElementById('enemy-hp-bar').style.width  = `${enemyHP}%`;
       document.getElementById('turn-counter').textContent = currentTurn;
-      ['attack-button','special-button','end-turn-button'].forEach(id => {
-        const btn = document.getElementById(id);
-        btn.disabled = !isPlayerTurn || attackInProgress;
-        btn.style.opacity = btn.disabled ? '0.5' : '1';
-      });
+      document.getElementById('turn-indicator').textContent = isPlayerTurn ? 'Your Turn' : 'Enemy Turn';
+      document.getElementById('attack-button').disabled  = !isPlayerTurn;
+      document.getElementById('special-button').disabled = !isPlayerTurn;
     }
 
-    function gameOver(win) { /* same as before */ }
-    function onWindowResize() { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+    function logBattleEvent(text) {
+      const log = document.getElementById('battle-log');
+      const p   = document.createElement('p');
+      p.textContent = text;
+      log.appendChild(p);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
 
     function render(time, frame) {
+      // AR hit test & reticle
       if (frame) {
-        const ref = localReferenceSpace;
-        if (hitTestSource && !gameStarted) {
+        const session = renderer.xr.getSession();
+        if (!hitTestSourceRequested) {
+          session.requestReferenceSpace('viewer').then(ref => {
+            session.requestHitTestSource({ space: ref }).then(src => hitTestSource = src);
+          });
+          session.addEventListener('end', () => { hitTestSourceRequested = false; hitTestSource = null; });
+          hitTestSourceRequested = true;
+        }
+        if (hitTestSource) {
+          const refSpace = renderer.xr.getReferenceSpace();
           const hits = frame.getHitTestResults(hitTestSource);
-          if (hits.length) {
-            const pose = hits[0].getPose(ref);
+          if (hits.length > 0 && !battleField.visible) {
+            const pose = hits[0].getPose(refSpace);
             reticle.visible = true;
             reticle.matrix.fromArray(pose.transform.matrix);
-            reticle.matrix.decompose(reticle.position, reticle.quaternion, reticle.scale);
           } else reticle.visible = false;
         }
       }
-      if (gameStarted) {
-        const t = clock.getElapsedTime();
-        if (playerCard) {
-          playerCard.position.y = playerCardPosition.y + Math.sin(t*2)*0.02;
-          playerCard.rotation.y = Math.PI + Math.sin(t)*0.1;
-        }
-        if (enemyCard) {
-          enemyCard.position.y = enemyCardPosition.y + Math.sin(t*2+Math.PI)*0.02;
-          enemyCard.rotation.y = Math.sin(t)*0.1;
-        }
+
+      const delta = clock.getDelta();
+      // Animate ambient particles
+      if (battleField.visible) {
+        const pSys = battleField.userData.particles;
+        const arr = pSys.geometry.attributes.position.array;
+        pSys.userData.velocities.forEach((v,i) => {
+          arr[i*3+1] += v.y * delta;
+          if (arr[i*3+1] > 0.5) arr[i*3+1] = 0;
+        });
+        pSys.geometry.attributes.position.needsUpdate = true;
       }
+
+      // Floating cards
+      [playerCard, enemyCard].forEach(card => {
+        if (!card) return;
+        const anim = card.userData.floatAnimation;
+        anim.phase += anim.speed * delta;
+        card.position.y = anim.startY + Math.sin(anim.phase) * 0.02;
+      });
+
+      // Particle shaders time
+      [playerAttackParticles, enemyAttackParticles].forEach(p => {
+        if (p && p.visible) p.material.uniforms.time.value = clock.elapsedTime;
+      });
+
+      // Damage texts fade out
+      damageTexts.slice().forEach((txt, idx) => {
+        txt.position.y += delta * 0.2;
+        txt.material.opacity -= delta * 0.5;
+        if (txt.material.opacity <= 0) {
+          scene.remove(txt);
+          damageTexts.splice(idx,1);
+        }
+      });
+
       renderer.render(scene, camera);
     }
   </script>
