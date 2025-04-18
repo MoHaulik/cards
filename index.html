@@ -7,57 +7,263 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
-    body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #000; }
-    #overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; text-align: center; }
-    #start-button { padding: 15px 30px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: all 0.2s; }
-    #start-button:hover { background-color: #45a049; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
-    #start-button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    #game-ui { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; z-index: 10; pointer-events: none; }
-    .button { background-color: rgba(0,0,0,0.7); color: white; border: 2px solid #4CAF50; padding: 10px 15px; border-radius: 5px; margin: 0 10px; cursor: pointer; pointer-events: auto; font-size: 16px; transition: all 0.2s; }
-    .button:hover:not([disabled]) { background-color: rgba(0,0,0,0.9); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
-    .button:active:not([disabled]) { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
-    .button[disabled] { opacity: 0.5; cursor: not-allowed; }
-    #game-info { position: absolute; top: 10px; right: 10px; background-color: rgba(0,0,0,0.6); color: white; padding: 10px; border-radius: 5px; font-size: 14px; z-index: 10; pointer-events: none; }
-    #battle-log { position: absolute; top: 100px; right: 10px; width: 200px; background-color: rgba(0,0,0,0.6); color: white; padding: 10px; border-radius: 5px; font-size: 14px; z-index: 10; pointer-events: none; max-height: 150px; overflow-y: auto; }
-    #battle-log p { margin: 5px 0; }
-    #tutorial { position: absolute; bottom: 80px; left: 0; right: 0; background-color: rgba(0,0,0,0.7); color: white; padding: 15px; font-size: 16px; text-align: center; transition: opacity 0.5s; }
-    .hp-bar { height: 6px; background-color: #4CAF50; margin-top: 3px; transition: width 0.5s; }
-    .type-icon { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
-    #card-deck { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; z-index: 11; pointer-events: none; }
-    .deck-preview { width: 60px; height: 90px; background: rgba(0,0,0,0.5); border: 2px solid gold; border-radius: 5px; margin: 0 5px; pointer-events: auto; cursor: pointer; transition: transform 0.2s; overflow: hidden; }
-    .deck-preview:hover { transform: translateY(-5px); }
-    .deck-preview.selected { box-shadow: 0 0 10px #fff, 0 0 20px gold; }
-    .deck-preview-color { width: 100%; height: 30%; }
-    .deck-preview-name { color: white; font-size: 10px; text-align: center; padding: 2px; }
-    #ar-not-supported { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 10px; text-align: center; z-index: 100; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: #000;
+    }
+
+    #overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      text-align: center;
+    }
+
+    #overlay h1 {
+      color: white;
+      text-shadow: 0 0 10px #4CAF50;
+    }
+
+    #start-button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      transition: all 0.2s;
+    }
+    #start-button:hover {
+      background-color: #45a049;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+    }
+    #start-button:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    #overlay p {
+      color: white;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+
+    #ar-not-supported {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      z-index: 100;
+    }
+
+    #ar-not-supported button {
+      padding: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    #game-ui {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .button {
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      border: 2px solid #4CAF50;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin: 0 10px;
+      cursor: pointer;
+      pointer-events: auto;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+    .button:hover:not([disabled]) {
+      background-color: rgba(0,0,0,0.9);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .button:active:not([disabled]) {
+      transform: translateY(1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #game-info {
+      display: none;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 10;
+      pointer-events: none;
+    }
+    #game-info .hp-bar {
+      height: 6px;
+      background-color: #4CAF50;
+      margin-top: 3px;
+      transition: width 0.5s;
+    }
+    .type-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    #battle-log {
+      display: none;
+      position: absolute;
+      top: 100px;
+      right: 10px;
+      width: 200px;
+      background-color: rgba(0,0,0,0.6);
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      z-index: 10;
+      pointer-events: none;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    #battle-log p {
+      margin: 5px 0;
+    }
+
+    #tutorial {
+      display: none;
+      position: absolute;
+      bottom: 80px;
+      left: 0;
+      right: 0;
+      background-color: rgba(0,0,0,0.7);
+      color: white;
+      padding: 15px;
+      font-size: 16px;
+      text-align: center;
+      transition: opacity 0.5s;
+      cursor: pointer;
+    }
+
+    #card-deck {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      z-index: 11;
+      pointer-events: none;
+    }
+    .deck-preview {
+      width: 60px;
+      height: 90px;
+      background: rgba(0,0,0,0.5);
+      border: 2px solid gold;
+      border-radius: 5px;
+      margin: 0 5px;
+      pointer-events: auto;
+      cursor: pointer;
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .deck-preview:hover {
+      transform: translateY(-5px);
+    }
+    .deck-preview.selected {
+      box-shadow: 0 0 10px #fff, 0 0 20px gold;
+    }
+    .deck-preview-color {
+      width: 100%;
+      height: 30%;
+    }
+    .deck-preview-name {
+      color: white;
+      font-size: 10px;
+      text-align: center;
+      padding: 2px;
+    }
   </style>
 </head>
 <body>
   <div id="overlay">
-    <h1 style="color:white; text-shadow:0 0 10px #4CAF50;">Floating Card Battle</h1>
+    <h1>Floating Card Battle</h1>
     <button id="start-button">Start AR Experience</button>
-    <p style="color:white; font-size:14px; margin-top:20px;">⚠️ Requires a device with AR capabilities</p>
+    <p>⚠️ Requires a device with AR capabilities</p>
   </div>
+
   <div id="ar-not-supported">
     <h2>AR Not Supported</h2>
     <p>Your device or browser doesn't support WebXR AR. Try using an AR-capable mobile device with Chrome or Safari.</p>
-    <button onclick="this.parentElement.style.display='none';" style="padding:10px; margin-top:10px;">Close</button>
+    <button onclick="this.parentElement.style.display='none';">Close</button>
   </div>
-  <div id="game-ui" style="display:none;">
+
+  <div id="game-ui">
     <button class="button" id="attack-button" disabled>Attack</button>
     <button class="button" id="special-button" disabled>Special Move</button>
     <button class="button" id="rotate-view">Rotate View</button>
   </div>
-  <div id="card-deck" style="display:none;"></div>
-  <div id="game-info" style="display:none;">
-    <div>Player: <span id="player-name">Select Card</span> <span id="player-type-icon" class="type-icon"></span></div>
-    <div>HP: <span id="player-hp">100</span>/100 <div class="hp-bar" id="player-hp-bar" style="width: 100%"></div></div>
-    <div style="margin-top: 10px;">Enemy: <span id="enemy-name">Card</span> <span id="enemy-type-icon" class="type-icon"></span></div>
-    <div>HP: <span id="enemy-hp">100</span>/100 <div class="hp-bar" id="enemy-hp-bar" style="width: 100%"></div></div>
-    <div style="margin-top: 10px;">Turn: <span id="turn-counter">1</span> (<span id="turn-indicator">Select Card</span>)</div>
+
+  <div id="card-deck"></div>
+
+  <div id="game-info">
+    <div>
+      Player: <span id="player-name">Select Card</span>
+      <span id="player-type-icon" class="type-icon"></span>
+    </div>
+    <div>
+      HP: <span id="player-hp">100</span>/100
+      <div class="hp-bar" id="player-hp-bar" style="width: 100%;"></div>
+    </div>
+    <div style="margin-top: 10px;">
+      Enemy: <span id="enemy-name">Card</span>
+      <span id="enemy-type-icon" class="type-icon"></span>
+    </div>
+    <div>
+      HP: <span id="enemy-hp">100</span>/100
+      <div class="hp-bar" id="enemy-hp-bar" style="width: 100%;"></div>
+    </div>
+    <div style="margin-top: 10px;">
+      Turn: <span id="turn-counter">1</span>
+      (<span id="turn-indicator">Select Card</span>)
+    </div>
   </div>
-  <div id="battle-log" style="display:none;"></div>
-  <div id="tutorial" style="display:none;">
+
+  <div id="battle-log"></div>
+
+  <div id="tutorial">
     Select your card by reaching out and tapping it.<br>
     Cards will float in front of you—tap a card to select.<br>
     Touch anywhere in AR to dismiss this message.
@@ -111,12 +317,11 @@
 
     function init() {
       scene = new THREE.Scene();
-      camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 20);
-      
-      // Setup renderer with proper settings for AR
-      renderer = new THREE.WebGLRenderer({ 
-        antialias: true, 
-        alpha: true, 
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
         premultipliedAlpha: false,
         logarithmicDepthBuffer: true
       });
@@ -128,11 +333,11 @@
 
       // Lights
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.5));
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      let dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // Battle arena
+      // Arena
       battleArena = createBattleArena();
       scene.add(battleArena);
 
@@ -152,147 +357,210 @@
     function createDeckPreview() {
       const deckEl = document.getElementById('card-deck');
       cardTypes.forEach((card, idx) => {
-        const preview = document.createElement('div');
+        let preview = document.createElement('div');
         preview.className = 'deck-preview';
         preview.dataset.index = idx;
         preview.innerHTML = `
           <div class="deck-preview-color" style="background-color:#${card.color.toString(16).padStart(6,'0')}"></div>
-          <div class="deck-preview-name">${card.name}</div>`;
+          <div class="deck-preview-name">${card.name}</div>
+        `;
         preview.addEventListener('click', () => selectDeckCard(idx));
         deckEl.appendChild(preview);
       });
     }
 
     function selectDeckCard(idx) {
+      // highlight selection
       document.querySelectorAll('.deck-preview').forEach(el => el.classList.remove('selected'));
-      const el = document.querySelector(`.deck-preview[data-index="${idx}"]`);
+      let el = document.querySelector(`.deck-preview[data-index="${idx}"]`);
       if (el) el.classList.add('selected');
 
+      // set player card data
       playerCardData = cardTypes[idx];
       document.getElementById('player-name').textContent = playerCardData.name;
       document.getElementById('player-type-icon').style.backgroundColor = `#${playerCardData.color.toString(16).padStart(6,'0')}`;
 
+      // add 3D card
       if (selectedCard) scene.remove(selectedCard);
       selectedCard = createCard(playerCardData, playerPosition, true);
       scene.add(selectedCard);
 
+      // choose random enemy card
       if (!enemyCard) {
-        do { enemyCardData = cardTypes[Math.floor(Math.random()*cardTypes.length)]; }
-        while (enemyCardData.name === playerCardData.name);
+        do {
+          enemyCardData = cardTypes[Math.floor(Math.random() * cardTypes.length)];
+        } while (enemyCardData.name === playerCardData.name);
         enemyCard = createCard(enemyCardData, enemyPosition, false);
         scene.add(enemyCard);
         document.getElementById('enemy-name').textContent = enemyCardData.name;
         document.getElementById('enemy-type-icon').style.backgroundColor = `#${enemyCardData.color.toString(16).padStart(6,'0')}`;
       }
 
-      // Remove floating deck
+      // clear floating deck
       cards.forEach(c => scene.remove(c));
       cards = [];
+
       startBattle();
     }
 
     function toggleRotation() {
       rotationSpeed = rotationSpeed ? 0 : 0.5;
-      document.getElementById('rotate-view').textContent = rotationSpeed ? 'Stop Rotation' : 'Rotate View';
+      document.getElementById('rotate-view').textContent =
+        rotationSpeed ? 'Stop Rotation' : 'Rotate View';
     }
 
     function createBattleArena() {
-      const grp = new THREE.Group();
-      const plat = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.6,0.65,0.02,32),
-        new THREE.MeshStandardMaterial({ color:0x111133, transparent:true, opacity:0.7, metalness:0.3, roughness:0.4 })
+      let grp = new THREE.Group();
+
+      // platform
+      let plat = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.65, 0.02, 32),
+        new THREE.MeshStandardMaterial({
+          color: 0x111133,
+          transparent: true,
+          opacity: 0.7,
+          metalness: 0.3,
+          roughness: 0.4
+        })
       );
-      
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.6,0.01,16,64),
-        new THREE.MeshBasicMaterial({ color:0x00ffff, transparent:true, opacity:0.8 })
+
+      // ring
+      let ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.6, 0.01, 16, 64),
+        new THREE.MeshBasicMaterial({
+          color: 0x00ffff,
+          transparent: true,
+          opacity: 0.8
+        })
       );
-      ring.rotation.x = Math.PI/2; 
+      ring.rotation.x = Math.PI / 2;
       ring.position.y = 0.01;
-      
-      const core = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05,0.05,0.6,16),
-        new THREE.MeshBasicMaterial({ color:0x88ccff, transparent:true, opacity:0.7 })
+
+      // core pillar
+      let core = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.6, 16),
+        new THREE.MeshBasicMaterial({
+          color: 0x88ccff,
+          transparent: true,
+          opacity: 0.7
+        })
       );
       core.position.y = 0.3;
 
-      // Simple ambient particles
-      const pCount = 100;
-      const pGeo = new THREE.BufferGeometry();
-      const pPos = new Float32Array(pCount*3);
-      const pVel = [];
-      for (let i=0;i<pCount;i++){
-        const r = 0.6*Math.random();
-        const th = Math.random()*Math.PI*2;
-        pPos[i*3]=r*Math.cos(th);
-        pPos[i*3+1]=Math.random()*0.8;
-        pPos[i*3+2]=r*Math.sin(th);
-        pVel.push({y:0.005+Math.random()*0.01, rot:Math.random()*0.01});
+      // ambient particles
+      let pCount = 100;
+      let pGeo = new THREE.BufferGeometry();
+      let pPos = new Float32Array(pCount * 3);
+      let pVel = [];
+      for (let i = 0; i < pCount; i++) {
+        let r = 0.6 * Math.random();
+        let th = Math.random() * Math.PI * 2;
+        pPos[i * 3]     = r * Math.cos(th);
+        pPos[i * 3 + 1] = Math.random() * 0.8;
+        pPos[i * 3 + 2] = r * Math.sin(th);
+        pVel.push({ y: 0.005 + Math.random() * 0.01, rot: Math.random() * 0.01 });
       }
-      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
-      const pMat = new THREE.PointsMaterial({ color:0x88ccff, size:0.01, transparent:true, opacity:0.6, sizeAttenuation:true });
-      const particles = new THREE.Points(pGeo,pMat);
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      let pMat = new THREE.PointsMaterial({
+        color: 0x88ccff,
+        size: 0.01,
+        transparent: true,
+        opacity: 0.6,
+        sizeAttenuation: true
+      });
+      let particles = new THREE.Points(pGeo, pMat);
       particles.userData = { velocities: pVel };
-      
+
       grp.add(plat, ring, core, particles);
       grp.userData.particles = particles;
-      grp.position.set(0,-0.3,-1.0);
+      grp.position.set(0, -0.3, -1.0);
+
       return grp;
     }
 
     function createCard(data, pos, isPlayer) {
-      const grp = new THREE.Group();
-      // Base card
-      const base = new THREE.Mesh(
-        new THREE.BoxGeometry(0.2,0.3,0.01),
-        new THREE.MeshStandardMaterial({ color:data.color, transparent:true, opacity:0.9, metalness:0.3, roughness:0.7 })
+      let grp = new THREE.Group();
+
+      // card base
+      let base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.3, 0.01),
+        new THREE.MeshStandardMaterial({
+          color: data.color,
+          transparent: true,
+          opacity: 0.9,
+          metalness: 0.3,
+          roughness: 0.7
+        })
       );
-      
-      // Border
-      const border = new THREE.Mesh(
-        new THREE.BoxGeometry(0.22,0.32,0.005),
-        new THREE.MeshStandardMaterial({ color:0xffd700, transparent:true, opacity:0.9, emissive:0xffd700, emissiveIntensity:0.4 })
+
+      // border glow
+      let border = new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 0.32, 0.005),
+        new THREE.MeshStandardMaterial({
+          color: 0xffd700,
+          transparent: true,
+          opacity: 0.9,
+          emissive: 0xffd700,
+          emissiveIntensity: 0.4
+        })
       );
       border.position.z = -0.01;
-      
-      // Character sphere
-      const char = new THREE.Mesh(
-        new THREE.SphereGeometry(0.05,16,16),
-        new THREE.MeshStandardMaterial({ color:0xffffff, emissive:data.color, emissiveIntensity:0.6, metalness:0.2, roughness:0.3 })
+
+      // character sphere
+      let char = new THREE.Mesh(
+        new THREE.SphereGeometry(0.05, 16, 16),
+        new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          emissive: data.color,
+          emissiveIntensity: 0.6,
+          metalness: 0.2,
+          roughness: 0.3
+        })
       );
       char.position.z = 0.03;
-      
-      // Simple glow effect
-      const glow = new THREE.Mesh(
-        new THREE.SphereGeometry(0.06,16,16),
-        new THREE.MeshBasicMaterial({ color:data.color, transparent:true, opacity:0.4, side:THREE.BackSide })
+
+      // glow halo
+      let glow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 16),
+        new THREE.MeshBasicMaterial({
+          color: data.color,
+          transparent: true,
+          opacity: 0.4,
+          side: THREE.BackSide
+        })
       );
       glow.position.copy(char.position);
-      
-      // Energy particles
-      const eCount = 30;
-      const eGeo = new THREE.BufferGeometry();
-      const ePos = new Float32Array(eCount*3);
-      for (let i=0;i<eCount;i++){
-        ePos[i*3]   = (Math.random()-0.5)*0.05;
-        ePos[i*3+1] = (Math.random()-0.5)*0.05;
-        ePos[i*3+2] = (Math.random()-0.5)*0.05;
+
+      // floating energy particles
+      let eCount = 30;
+      let eGeo = new THREE.BufferGeometry();
+      let ePos = new Float32Array(eCount * 3);
+      for (let i = 0; i < eCount; i++) {
+        ePos[i * 3]     = (Math.random() - 0.5) * 0.05;
+        ePos[i * 3 + 1] = (Math.random() - 0.5) * 0.05;
+        ePos[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
       }
-      eGeo.setAttribute('position', new THREE.BufferAttribute(ePos,3));
-      const energy = new THREE.Points(
+      eGeo.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
+      let energy = new THREE.Points(
         eGeo,
-        new THREE.PointsMaterial({ color:data.color, size:0.005, transparent:true, opacity:0.7, sizeAttenuation:true })
+        new THREE.PointsMaterial({
+          color: data.color,
+          size: 0.005,
+          transparent: true,
+          opacity: 0.7,
+          sizeAttenuation: true
+        })
       );
       energy.position.copy(char.position);
 
-      // Add labels
+      // add name/stats labels
       addCardLabels(grp, data);
 
       grp.add(base, border, char, glow, energy);
       grp.position.copy(pos);
-      grp.userData = { 
-        ...data, 
-        energy, 
+      grp.userData = {
+        ...data,
+        energy,
         float: {
           startY: pos.y,
           speed: isPlayer ? 2 : 2.2,
@@ -306,32 +574,48 @@
 
     function addCardLabels(group, data) {
       function txtCanvas(text, fontSize, w, h) {
-        const c = document.createElement('canvas');
+        let c = document.createElement('canvas');
         c.width = w; c.height = h;
-        const ctx = c.getContext('2d');
+        let ctx = c.getContext('2d');
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.beginPath(); 
-        ctx.rect(0, 0, w, h);
-        ctx.fill();
+        ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = '#fff';
         ctx.font = `bold ${fontSize}px Arial`;
-        ctx.textAlign = 'center'; 
+        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, w/2, h/2);
+        ctx.fillText(text, w / 2, h / 2);
         return new THREE.CanvasTexture(c);
       }
-      
-      const nameMat = new THREE.MeshBasicMaterial({ map: txtCanvas(data.name, 24, 128, 32), transparent: true });
-      const nameMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.04), nameMat);
+
+      let nameMat = new THREE.MeshBasicMaterial({
+        map: txtCanvas(data.name, 24, 128, 32),
+        transparent: true
+      });
+      let nameMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.15, 0.04),
+        nameMat
+      );
       nameMesh.position.set(0, 0.12, 0.02);
-      
-      const stats = `${data.type} | ATK:${data.attack}`;
-      const statsMat = new THREE.MeshBasicMaterial({ map: txtCanvas(stats, 16, 128, 24), transparent: true });
-      const statsMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.03), statsMat);
+
+      let stats = `${data.type} | ATK:${data.attack}`;
+      let statsMat = new THREE.MeshBasicMaterial({
+        map: txtCanvas(stats, 16, 128, 24),
+        transparent: true
+      });
+      let statsMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.15, 0.03),
+        statsMat
+      );
       statsMesh.position.set(0, -0.12, 0.02);
-      
-      const specMat = new THREE.MeshBasicMaterial({ map: txtCanvas(data.special, 12, 128, 20), transparent: true });
-      const specMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 0.025), specMat);
+
+      let specMat = new THREE.MeshBasicMaterial({
+        map: txtCanvas(data.special, 12, 128, 20),
+        transparent: true
+      });
+      let specMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.12, 0.025),
+        specMat
+      );
       specMesh.position.set(0, -0.08, 0.02);
 
       group.add(nameMesh, statsMesh, specMesh);
@@ -341,7 +625,7 @@
       cards.forEach(c => scene.remove(c));
       cards = [];
       cardTypes.forEach((cData, i) => {
-        const c = createCard(cData, deckPositions[i], true);
+        let c = createCard(cData, deckPositions[i], true);
         scene.add(c);
         cards.push(c);
       });
@@ -349,18 +633,15 @@
 
     function onSelect(event) {
       if (gamePhase !== 'selection') return;
-      
-      // Raycast from controller
-      const tempMat = new THREE.Matrix4().identity().extractRotation(controller.matrixWorld);
+      let tempMat = new THREE.Matrix4().identity().extractRotation(controller.matrixWorld);
       raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
       raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMat);
-      
-      const hits = raycaster.intersectObjects(scene.children, true);
+      let hits = raycaster.intersectObjects(scene.children, true);
       for (let h of hits) {
-        const obj = h.object;
+        let obj = h.object;
         if (obj.userData && obj.userData.isCard) {
-          const grp = obj.userData.parentGroup;
-          const idx = cardTypes.findIndex(cd => cd.name === grp.userData.name);
+          let grp = obj.userData.parentGroup;
+          let idx = cardTypes.findIndex(cd => cd.name === grp.userData.name);
           if (idx >= 0) selectDeckCard(idx);
           break;
         }
@@ -380,23 +661,27 @@
       logBattle('Battle start! Player\'s turn.');
     }
 
-    function performAttack() { if (!isPlayerTurn) return; doAttack(false); }
-    function performSpecialAttack() { if (!isPlayerTurn) return; doAttack(true); }
+    function performAttack() { if (isPlayerTurn) doAttack(false); }
+    function performSpecialAttack() { if (isPlayerTurn) doAttack(true); }
 
     function doAttack(isSpecial) {
-      const attacker = isPlayerTurn ? playerCardData : enemyCardData;
-      const defender = isPlayerTurn ? enemyCardData : playerCardData;
-      const base = isSpecial ? attacker.specialDamage : attacker.attack;
-      const mult = typeEffectiveness[attacker.type][defender.type] || 1;
-      const dmg = Math.round(base * mult);
-      
+      let attacker = isPlayerTurn ? playerCardData : enemyCardData;
+      let defender = isPlayerTurn ? enemyCardData : playerCardData;
+      let base = isSpecial ? attacker.specialDamage : attacker.attack;
+      let mult = typeEffectiveness[attacker.type][defender.type] || 1;
+      let dmg = Math.round(base * mult);
+
       if (isPlayerTurn) enemyHP = Math.max(0, enemyHP - dmg);
       else playerHP = Math.max(0, playerHP - dmg);
-      
+
       updateHPBars();
-      logBattle(`${isPlayerTurn ? 'Player' : 'Enemy'} used ${isSpecial ? attacker.special : 'Attack'} for ${dmg} damage!`);
+      logBattle(
+        `${isPlayerTurn ? 'Player' : 'Enemy'} used ${
+          isSpecial ? attacker.special : 'Attack'
+        } for ${dmg} damage!`
+      );
       showDamageText(isPlayerTurn ? enemyPosition : playerPosition, dmg);
-      
+
       createAttackParticles();
       launchParticles(isPlayerTurn);
     }
@@ -404,34 +689,28 @@
     function createAttackParticles() {
       if (playerAttackParticles) scene.remove(playerAttackParticles);
       if (enemyAttackParticles) scene.remove(enemyAttackParticles);
-      
+
       playerAttackParticles = makeParticles(playerCardData.particleColor, 'p1');
       enemyAttackParticles = makeParticles(enemyCardData.particleColor, 'p2');
-      
       scene.add(playerAttackParticles, enemyAttackParticles);
     }
 
     function makeParticles(colorHex, name) {
-      const cnt = 50;
-      const geo = new THREE.BufferGeometry();
-      const pos = new Float32Array(cnt*3);
-      const c = new THREE.Color(colorHex);
-      
-      for(let i=0; i<cnt; i++) {
-        pos[i*3] = pos[i*3+1] = pos[i*3+2] = 0;
-      }
-      
+      let cnt = 50;
+      let geo = new THREE.BufferGeometry();
+      let pos = new Float32Array(cnt * 3);
+      for (let i = 0; i < cnt * 3; i++) pos[i] = 0;
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      
-      const mat = new THREE.PointsMaterial({ 
+
+      let mat = new THREE.PointsMaterial({
         color: colorHex,
         size: 0.01,
         transparent: true,
         opacity: 0.8,
         sizeAttenuation: true
       });
-      
-      const pts = new THREE.Points(geo, mat);
+
+      let pts = new THREE.Points(geo, mat);
       pts.name = name;
       pts.visible = false;
       pts.userData = { start: 0, anim: false, vel: new THREE.Vector3(), dur: 0.6 };
@@ -439,13 +718,12 @@
     }
 
     function launchParticles(fromPlayer) {
-      const now = clock.getElapsedTime();
-      const pSys = fromPlayer ? playerAttackParticles : enemyAttackParticles;
-      const fromPos = fromPlayer ? playerPosition : enemyPosition;
-      const toPos = fromPlayer ? enemyPosition : playerPosition;
-      
+      let now = clock.getElapsedTime();
+      let pSys = fromPlayer ? playerAttackParticles : enemyAttackParticles;
+      let fromPos = fromPlayer ? playerPosition : enemyPosition;
+      let toPos   = fromPlayer ? enemyPosition  : playerPosition;
       pSys.position.copy(fromPos);
-      const vel = new THREE.Vector3().subVectors(toPos, fromPos).divideScalar(pSys.userData.dur);
+      let vel = new THREE.Vector3().subVectors(toPos, fromPos).divideScalar(pSys.userData.dur);
       pSys.userData.vel.copy(vel);
       pSys.userData.start = now;
       pSys.userData.anim = true;
@@ -453,37 +731,33 @@
     }
 
     function showDamageText(pos, dmg) {
-      // Simple text implementation without TextGeometry if font not loaded
-      const canvas = document.createElement('canvas');
-      canvas.width = 128;
-      canvas.height = 64;
-      const ctx = canvas.getContext('2d');
+      let canvas = document.createElement('canvas');
+      canvas.width = 128; canvas.height = 64;
+      let ctx = canvas.getContext('2d');
       ctx.fillStyle = 'red';
       ctx.font = 'bold 48px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`-${dmg}`, 64, 48);
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      const sprite = new THREE.Sprite(material);
+      let texture = new THREE.CanvasTexture(canvas);
+      let material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      let sprite = new THREE.Sprite(material);
       sprite.position.copy(pos).add(new THREE.Vector3(0, 0.1, 0));
       sprite.scale.set(0.1, 0.05, 1);
-      
       scene.add(sprite);
       damageTexts.push({ mesh: sprite, start: clock.getElapsedTime(), dur: 1.0 });
     }
 
     function updateHPBars() {
-      const pPct = (playerHP/100)*100;
-      const ePct = (enemyHP/100)*100;
+      let pPct = (playerHP / 100) * 100;
+      let ePct = (enemyHP / 100)  * 100;
       document.getElementById('player-hp').textContent = playerHP;
       document.getElementById('player-hp-bar').style.width = `${pPct}%`;
-      document.getElementById('enemy-hp').textContent = enemyHP;
-      document.getElementById('enemy-hp-bar').style.width = `${ePct}%`;
+      document.getElementById('enemy-hp').textContent  = enemyHP;
+      document.getElementById('enemy-hp-bar').style.width  = `${ePct}%`;
     }
 
     function logBattle(msg) {
-      const p = document.createElement('p');
+      let p = document.createElement('p');
       p.textContent = msg;
       document.getElementById('battle-log').appendChild(p);
       document.getElementById('battle-log').scrollTop = 1e9;
@@ -491,24 +765,22 @@
 
     function nextTurn() {
       if (playerHP === 0 || enemyHP === 0) {
-        const res = playerHP === 0 ? 'You Lose!' : 'You Win!';
+        let res = playerHP === 0 ? 'You Lose!' : 'You Win!';
         logBattle(res);
-        document.getElementById('attack-button').disabled = true;
+        document.getElementById('attack-button').disabled  = true;
         document.getElementById('special-button').disabled = true;
         return;
       }
-      
       isPlayerTurn = !isPlayerTurn;
       if (isPlayerTurn) {
         currentTurn++;
         document.getElementById('turn-counter').textContent = currentTurn;
       }
       document.getElementById('turn-indicator').textContent = isPlayerTurn ? 'Player' : 'Enemy';
-      
+
       if (!isPlayerTurn) {
         setTimeout(() => {
-          // Simple AI
-          const aiMove = Math.random() > 0.7; // 30% chance to use special
+          let aiMove = Math.random() > 0.7;
           doAttack(aiMove);
         }, 800);
       }
@@ -522,190 +794,151 @@
 
     function animateParticles(sys, delta) {
       if (!sys || !sys.userData.anim) return;
-      const t = clock.getElapsedTime() - sys.userData.start;
+      let t = clock.getElapsedTime() - sys.userData.start;
       if (t > sys.userData.dur) {
         sys.visible = false;
         sys.userData.anim = false;
         nextTurn();
-        return;
+      } else {
+        sys.position.addScaledVector(sys.userData.vel, delta);
       }
-      sys.position.addScaledVector(sys.userData.vel, delta);
     }
 
     function animateDamageTexts(delta) {
-      for (let i = damageTexts.length-1; i>=0; i--) {
-        const dt = damageTexts[i];function animateDamageTexts(delta) {
-  for (let i = damageTexts.length-1; i>=0; i--) {
-    const dt = damageTexts[i];
-    const t = clock.getElapsedTime() - dt.start;
-    
-    if (t > dt.dur) {
-      scene.remove(dt.mesh);
-      damageTexts.splice(i, 1);
-    } else {
-      // Move upward and fade out
-      dt.mesh.position.y += delta * 0.2;
-      dt.mesh.material.opacity = 1 - (t / dt.dur);
+      for (let i = damageTexts.length - 1; i >= 0; i--) {
+        let dt = damageTexts[i];
+        let t  = clock.getElapsedTime() - dt.start;
+        if (t > dt.dur) {
+          scene.remove(dt.mesh);
+          damageTexts.splice(i, 1);
+        } else {
+          dt.mesh.position.y += delta * 0.2;
+          dt.mesh.material.opacity = 1 - (t / dt.dur);
+        }
+      }
     }
-  }
-}
 
-function updateArenaParticles(delta) {
-  if (!battleArena || !battleArena.userData.particles) return;
-  
-  const particles = battleArena.userData.particles;
-  const positions = particles.geometry.attributes.position;
-  const vels = particles.userData.velocities;
-  
-  for (let i = 0; i < positions.count; i++) {
-    // Move particles upward
-    positions.array[i*3+1] += vels[i].y;
-    
-    // Reset if out of bounds
-    if (positions.array[i*3+1] > 0.8) {
-      positions.array[i*3+1] = 0;
+    function updateArenaParticles(delta) {
+      if (!battleArena || !battleArena.userData.particles) return;
+      let particles = battleArena.userData.particles;
+      let positions = particles.geometry.attributes.position;
+      let vels = particles.userData.velocities;
+      for (let i = 0; i < positions.count; i++) {
+        positions.array[i*3+1] += vels[i].y;
+        if (positions.array[i*3+1] > 0.8) {
+          positions.array[i*3+1] = 0;
+        }
+        let x = positions.array[i*3], z = positions.array[i*3+2];
+        let ang = vels[i].rot;
+        positions.array[i*3]   = x * Math.cos(ang) - z * Math.sin(ang);
+        positions.array[i*3+2] = x * Math.sin(ang) + z * Math.cos(ang);
+      }
+      positions.needsUpdate = true;
     }
-    
-    // Rotate around center
-    const x = positions.array[i*3];
-    const z = positions.array[i*3+2];
-    const angle = vels[i].rot;
-    positions.array[i*3] = x * Math.cos(angle) - z * Math.sin(angle);
-    positions.array[i*3+2] = x * Math.sin(angle) + z * Math.cos(angle);
-  }
-  
-  positions.needsUpdate = true;
-}
 
-function animate() {
-  renderer.setAnimationLoop(render);
-}
-
-function updateCardAnimations(delta) {
-  function animateCard(card) {
-    if (!card || !card.userData.float) return;
-    
-    const floatData = card.userData.float;
-    const time = clock.getElapsedTime();
-    
-    // Floating animation
-    card.position.y = floatData.startY + Math.sin(time * floatData.speed) * 0.03;
-    
-    // Card rotation animation
-    card.rotation.y += delta * floatData.rotSpeed;
-    
-    // Pulse energy particles
-    if (card.userData.energy) {
-      card.userData.energy.rotation.z += delta * 0.2;
+    function updateCardAnimations(delta) {
+      function animateCard(card) {
+        if (!card || !card.userData.float) return;
+        let fd = card.userData.float;
+        let time = clock.getElapsedTime();
+        card.position.y    = fd.startY + Math.sin(time * fd.speed) * 0.03;
+        card.rotation.y   += delta * fd.rotSpeed;
+        if (card.userData.energy) {
+          card.userData.energy.rotation.z += delta * 0.2;
+        }
+      }
+      if (selectedCard) animateCard(selectedCard);
+      if (enemyCard) animateCard(enemyCard);
+      cards.forEach(c => animateCard(c));
     }
-  }
-  
-  if (selectedCard) animateCard(selectedCard);
-  if (enemyCard) animateCard(enemyCard);
-  
-  cards.forEach(card => animateCard(card));
-}
 
-function rotateBattleArena(delta) {
-  if (battleArena && rotationSpeed) {
-    battleArena.rotation.y += delta * rotationSpeed;
-  }
-}
+    function rotateBattleArena(delta) {
+      if (battleArena && rotationSpeed) {
+        battleArena.rotation.y += delta * rotationSpeed;
+      }
+    }
 
-function render(timestamp, frame) {
-  const delta = clock.getDelta();
-  
-  // Handle AR session updates
-  if (frame) {
-    const referenceSpace = renderer.xr.getReferenceSpace();
-    const session = renderer.xr.getSession();
-    
-    // Handle hit testing and placing objects if needed
-  }
-  
-  // Update animations
-  updateCardAnimations(delta);
-  updateArenaParticles(delta);
-  animateParticles(playerAttackParticles, delta);
-  animateParticles(enemyAttackParticles, delta);
-  animateDamageTexts(delta);
-  rotateBattleArena(delta);
-  
-  renderer.render(scene, camera);
-}
+    function render(timestamp, frame) {
+      let delta = clock.getDelta();
+      // AR frame handling would go here...
+      updateCardAnimations(delta);
+      updateArenaParticles(delta);
+      animateParticles(playerAttackParticles, delta);
+      animateParticles(enemyAttackParticles, delta);
+      animateDamageTexts(delta);
+      rotateBattleArena(delta);
+      renderer.render(scene, camera);
+    }
 
-function startARSession() {
-  if (!navigator.xr) {
-    document.getElementById('ar-not-supported').style.display = 'block';
-    return;
-  }
-  
-  navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-    if (supported) {
-      navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['hit-test', 'local-floor'],
-        optionalFeatures: ['dom-overlay'],
-        domOverlay: { root: document.body }
-      }).then(onSessionStarted)
-      .catch(err => {
-        console.error('Failed to start AR session:', err);
+    function startARSession() {
+      if (!navigator.xr) {
         document.getElementById('ar-not-supported').style.display = 'block';
+        return;
+      }
+      navigator.xr.isSessionSupported('immersive-ar').then(supported => {
+        if (supported) {
+          navigator.xr.requestSession('immersive-ar', {
+            requiredFeatures: ['hit-test', 'local-floor'],
+            optionalFeatures: ['dom-overlay'],
+            domOverlay: { root: document.body }
+          }).then(onSessionStarted)
+            .catch(err => {
+              console.error('Failed to start AR session:', err);
+              document.getElementById('ar-not-supported').style.display = 'block';
+            });
+        } else {
+          document.getElementById('ar-not-supported').style.display = 'block';
+        }
       });
-    } else {
-      document.getElementById('ar-not-supported').style.display = 'block';
     }
-  });
-}
 
-function onSessionStarted(session) {
-  renderer.xr.setReferenceSpaceType('local');
-  renderer.xr.setSession(session);
-  
-  document.getElementById('overlay').style.display = 'none';
-  document.getElementById('game-ui').style.display = 'flex';
-  document.getElementById('game-info').style.display = 'block';
-  document.getElementById('battle-log').style.display = 'block';
-  document.getElementById('card-deck').style.display = 'flex';
-  document.getElementById('tutorial').style.display = 'block';
-  
-  // Create controller
-  controller = renderer.xr.getController(0);
-  controller.addEventListener('select', onSelect);
-  scene.add(controller);
-  
-  // Set up initial game state
-  createFloatingDeck();
-  xrSessionActive = true;
-  gamePhase = 'selection';
-  
-  // Session end handler
-  session.addEventListener('end', () => {
-    xrSessionActive = false;
-    document.getElementById('overlay').style.display = 'block';
-    document.getElementById('game-ui').style.display = 'none';
-    document.getElementById('game-info').style.display = 'none';
-    document.getElementById('battle-log').style.display = 'none';
-    document.getElementById('card-deck').style.display = 'none';
-    document.getElementById('tutorial').style.display = 'none';
-  });
-  
-  animate();
-}
+    function onSessionStarted(session) {
+      renderer.xr.setReferenceSpaceType('local');
+      renderer.xr.setSession(session);
 
-// Start the experience
-window.onload = function() {
-  // Check for XR support
-  if ('xr' in navigator) {
-    navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
-      if (!supported) {
+      // show/hide UI elements
+      document.getElementById('overlay').style.display     = 'none';
+      document.getElementById('game-ui').style.display     = 'flex';
+      document.getElementById('game-info').style.display   = 'block';
+      document.getElementById('battle-log').style.display  = 'block';
+      document.getElementById('card-deck').style.display   = 'flex';
+      document.getElementById('tutorial').style.display    = 'block';
+
+      controller = renderer.xr.getController(0);
+      controller.addEventListener('select', onSelect);
+      scene.add(controller);
+
+      createFloatingDeck();
+      xrSessionActive = true;
+      gamePhase = 'selection';
+      animate();
+
+      session.addEventListener('end', () => {
+        xrSessionActive = false;
+        document.getElementById('overlay').style.display    = 'block';
+        document.getElementById('game-ui').style.display    = 'none';
+        document.getElementById('game-info').style.display  = 'none';
+        document.getElementById('battle-log').style.display = 'none';
+        document.getElementById('card-deck').style.display  = 'none';
+        document.getElementById('tutorial').style.display   = 'none';
+      });
+    }
+
+    window.onload = () => {
+      if ('xr' in navigator) {
+        navigator.xr.isSessionSupported('immersive-ar').then(supported => {
+          if (!supported) {
+            document.getElementById('start-button').disabled = true;
+            document.getElementById('start-button').textContent = 'AR Not Supported';
+            document.getElementById('ar-not-supported').style.display = 'block';
+          }
+        });
+      } else {
         document.getElementById('start-button').disabled = true;
         document.getElementById('start-button').textContent = 'AR Not Supported';
         document.getElementById('ar-not-supported').style.display = 'block';
       }
-    });
-  } else {
-    document.getElementById('start-button').disabled = true;
-    document.getElementById('start-button').textContent = 'AR Not Supported';
-    document.getElementById('ar-not-supported').style.display = 'block';
-  }
-};
+    };
+  </script>
+</body>
+</html>
