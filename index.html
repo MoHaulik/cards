@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -838,6 +837,7 @@
         const supported = await navigator.xr.isSessionSupported('immersive-ar');
         if (!supported) throw new Error('immersive-ar not supported');
         const session = await navigator.xr.requestSession('immersive-ar', {
+          // only optional features, so session will launch on any WebXR-capable browser
           optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor'],
           domOverlay: { root: document.body }
         });
@@ -897,4 +897,3 @@
   </script>
 </body>
 </html>
-```
