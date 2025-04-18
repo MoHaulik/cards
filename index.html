@@ -13,7 +13,7 @@
       font-family: Arial, sans-serif;
       background: #000;
     }
-
+    /* ARButton will be appended automatically */
     #overlay {
       position: absolute;
       top: 50%;
@@ -22,39 +22,10 @@
       z-index: 10;
       text-align: center;
     }
-
     #overlay h1 {
       color: white;
       text-shadow: 0 0 10px #4CAF50;
     }
-
-    #start-button {
-      padding: 15px 30px;
-      font-size: 18px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-      transition: all 0.2s;
-    }
-    #start-button:hover {
-      background-color: #45a049;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0,0,0,0.3);
-    }
-    #start-button:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }
-
-    #overlay p {
-      color: white;
-      font-size: 14px;
-      margin-top: 20px;
-    }
-
     #ar-not-supported {
       display: none;
       position: absolute;
@@ -68,13 +39,11 @@
       text-align: center;
       z-index: 100;
     }
-
     #ar-not-supported button {
       padding: 10px;
       margin-top: 10px;
       cursor: pointer;
     }
-
     #game-ui {
       display: none;
       position: absolute;
@@ -86,7 +55,6 @@
       z-index: 10;
       pointer-events: none;
     }
-
     .button {
       background-color: rgba(0,0,0,0.7);
       color: white;
@@ -112,7 +80,6 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
-
     #game-info {
       display: none;
       position: absolute;
@@ -140,7 +107,6 @@
       margin-right: 5px;
       vertical-align: middle;
     }
-
     #battle-log {
       display: none;
       position: absolute;
@@ -160,7 +126,6 @@
     #battle-log p {
       margin: 5px 0;
     }
-
     #tutorial {
       display: none;
       position: absolute;
@@ -175,7 +140,6 @@
       transition: opacity 0.5s;
       cursor: pointer;
     }
-
     #card-deck {
       display: none;
       position: absolute;
@@ -199,16 +163,9 @@
       transition: transform 0.2s;
       overflow: hidden;
     }
-    .deck-preview:hover {
-      transform: translateY(-5px);
-    }
-    .deck-preview.selected {
-      box-shadow: 0 0 10px #fff, 0 0 20px gold;
-    }
-    .deck-preview-color {
-      width: 100%;
-      height: 30%;
-    }
+    .deck-preview:hover { transform: translateY(-5px); }
+    .deck-preview.selected { box-shadow: 0 0 10px #fff, 0 0 20px gold; }
+    .deck-preview-color { width: 100%; height: 30%; }
     .deck-preview-name {
       color: white;
       font-size: 10px;
@@ -220,57 +177,36 @@
 <body>
   <div id="overlay">
     <h1>Floating Card Battle</h1>
-    <button id="start-button">Start AR Experience</button>
-    <p>⚠️ Requires a device with AR capabilities</p>
+    <p>⚠️ Tap “ENTER AR” to begin</p>
   </div>
-
   <div id="ar-not-supported">
     <h2>AR Not Supported</h2>
-    <p>Your device or browser doesn't support WebXR AR. Try using an AR-capable mobile device with Chrome or Safari.</p>
+    <p>Your device or browser doesn't support WebXR AR. Try an AR-capable mobile device with Chrome or Safari.</p>
     <button onclick="document.getElementById('ar-not-supported').style.display='none'">Close</button>
   </div>
-
   <div id="game-ui">
     <button class="button" id="attack-button" disabled>Attack</button>
     <button class="button" id="special-button" disabled>Special Move</button>
     <button class="button" id="rotate-view">Rotate View</button>
   </div>
-
   <div id="card-deck"></div>
-
   <div id="game-info">
-    <div>
-      Player: <span id="player-name">Select Card</span>
-      <span id="player-type-icon" class="type-icon"></span>
-    </div>
-    <div>
-      HP: <span id="player-hp">100</span>/100
-      <div class="hp-bar" id="player-hp-bar" style="width: 100%;"></div>
-    </div>
-    <div style="margin-top: 10px;">
-      Enemy: <span id="enemy-name">Card</span>
-      <span id="enemy-type-icon" class="type-icon"></span>
-    </div>
-    <div>
-      HP: <span id="enemy-hp">100</span>/100
-      <div class="hp-bar" id="enemy-hp-bar" style="width: 100%;"></div>
-    </div>
-    <div style="margin-top: 10px;">
-      Turn: <span id="turn-counter">1</span>
-      (<span id="turn-indicator">Select Card</span>)
-    </div>
+    <div>Player: <span id="player-name">Select Card</span> <span id="player-type-icon" class="type-icon"></span></div>
+    <div>HP: <span id="player-hp">100</span>/100 <div class="hp-bar" id="player-hp-bar" style="width:100%"></div></div>
+    <div style="margin-top:10px">Enemy: <span id="enemy-name">Card</span> <span id="enemy-type-icon" class="type-icon"></span></div>
+    <div>HP: <span id="enemy-hp">100</span>/100 <div class="hp-bar" id="enemy-hp-bar" style="width:100%"></div></div>
+    <div style="margin-top:10px">Turn: <span id="turn-counter">1</span> (<span id="turn-indicator">Select Card</span>)</div>
   </div>
-
   <div id="battle-log"></div>
-
   <div id="tutorial">
     Select your card by reaching out and tapping it.<br>
-    Cards will float in front of you—tap a card to select.<br>
-    Touch anywhere in AR to dismiss this message.
+    Cards float in front of you—tap to select.<br>
+    Touch anywhere in AR to dismiss.
   </div>
 
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { ARButton } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/ARButton.js';
     import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FontLoader.js';
 
     let camera, scene, renderer, controller;
@@ -323,27 +259,26 @@
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
-      renderer = new THREE.WebGLRenderer({
-        antialias: true,
-        alpha: true,
-        premultipliedAlpha: false,
-        logarithmicDepthBuffer: true
-      });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, premultipliedAlpha: false, logarithmicDepthBuffer: true });
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
       renderer.outputEncoding = THREE.sRGBEncoding;
       document.body.appendChild(renderer.domElement);
 
+      // Lights
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.5));
       const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
+      // Create arena and deck UI
       battleArena = createBattleArena();
       scene.add(battleArena);
+      createDeckPreview();
+      window.addEventListener('resize', onWindowResize);
 
-      document.getElementById('start-button').addEventListener('click', startARSession);
+      // Hook up your in-canvas UI buttons
       document.getElementById('attack-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(false); });
       document.getElementById('special-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(true); });
       document.getElementById('rotate-view').addEventListener('click', toggleRotation);
@@ -351,8 +286,40 @@
         document.getElementById('tutorial').style.display = 'none';
       });
 
-      createDeckPreview();
-      window.addEventListener('resize', onWindowResize);
+      // ARButton helper
+      const arBtn = ARButton.createButton(renderer, {
+        optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor'],
+        domOverlay: { root: document.body }
+      });
+      document.body.appendChild(arBtn);
+
+      // When session starts/ends, toggle your overlay/UI
+      renderer.xr.addEventListener('sessionstart', () => {
+        document.getElementById('overlay').style.display    = 'none';
+        document.getElementById('game-ui').style.display    = 'flex';
+        document.getElementById('game-info').style.display  = 'block';
+        document.getElementById('battle-log').style.display = 'block';
+        document.getElementById('card-deck').style.display  = 'flex';
+        document.getElementById('tutorial').style.display   = 'block';
+
+        controller = renderer.xr.getController(0);
+        controller.addEventListener('select', onSelect);
+        scene.add(controller);
+
+        xrSessionActive = true;
+        gamePhase = 'selection';
+        renderer.setAnimationLoop(render);
+      });
+
+      renderer.xr.addEventListener('sessionend', () => {
+        xrSessionActive = false;
+        document.getElementById('overlay').style.display    = 'block';
+        document.getElementById('game-ui').style.display    = 'none';
+        document.getElementById('game-info').style.display  = 'none';
+        document.getElementById('battle-log').style.display = 'none';
+        document.getElementById('card-deck').style.display  = 'none';
+        document.getElementById('tutorial').style.display   = 'none';
+      });
     }
 
     function createDeckPreview() {
@@ -395,7 +362,6 @@
 
       cards.forEach(c => scene.remove(c));
       cards = [];
-
       startBattle();
     }
 
@@ -409,31 +375,16 @@
       const grp = new THREE.Group();
       const plat = new THREE.Mesh(
         new THREE.CylinderGeometry(0.6, 0.65, 0.02, 32),
-        new THREE.MeshStandardMaterial({
-          color: 0x111133,
-          transparent: true,
-          opacity: 0.7,
-          metalness: 0.3,
-          roughness: 0.4
-        })
+        new THREE.MeshStandardMaterial({ color: 0x111133, transparent: true, opacity: 0.7, metalness: 0.3, roughness: 0.4 })
       );
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.6, 0.01, 16, 64),
-        new THREE.MeshBasicMaterial({
-          color: 0x00ffff,
-          transparent: true,
-          opacity: 0.8
-        })
+        new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8 })
       );
-      ring.rotation.x = Math.PI / 2;
-      ring.position.y = 0.01;
+      ring.rotation.x = Math.PI / 2; ring.position.y = 0.01;
       const core = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.6, 16),
-        new THREE.MeshBasicMaterial({
-          color: 0x88ccff,
-          transparent: true,
-          opacity: 0.7
-        })
+        new THREE.MeshBasicMaterial({ color: 0x88ccff, transparent: true, opacity: 0.7 })
       );
       core.position.y = 0.3;
 
@@ -450,13 +401,7 @@
         pVel.push({ y: 0.005 + Math.random() * 0.01, rot: Math.random() * 0.01 });
       }
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      const pMat = new THREE.PointsMaterial({
-        color: 0x88ccff,
-        size: 0.01,
-        transparent: true,
-        opacity: 0.6,
-        sizeAttenuation: true
-      });
+      const pMat = new THREE.PointsMaterial({ color: 0x88ccff, size: 0.01, transparent: true, opacity: 0.6, sizeAttenuation: true });
       const particles = new THREE.Points(pGeo, pMat);
       particles.userData = { velocities: pVel };
 
@@ -470,44 +415,21 @@
       const grp = new THREE.Group();
       const base = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, 0.3, 0.01),
-        new THREE.MeshStandardMaterial({
-          color: data.color,
-          transparent: true,
-          opacity: 0.9,
-          metalness: 0.3,
-          roughness: 0.7
-        })
+        new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.9, metalness: 0.3, roughness: 0.7 })
       );
       const border = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.32, 0.005),
-        new THREE.MeshStandardMaterial({
-          color: 0xffd700,
-          transparent: true,
-          opacity: 0.9,
-          emissive: 0xffd700,
-          emissiveIntensity: 0.4
-        })
+        new THREE.MeshStandardMaterial({ color: 0xffd700, transparent: true, opacity: 0.9, emissive: 0xffd700, emissiveIntensity: 0.4 })
       );
       border.position.z = -0.01;
       const char = new THREE.Mesh(
         new THREE.SphereGeometry(0.05, 16, 16),
-        new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          emissive: data.color,
-          emissiveIntensity: 0.6,
-          metalness: 0.2,
-          roughness: 0.3
-        })
+        new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color, emissiveIntensity: 0.6, metalness: 0.2, roughness: 0.3 })
       );
       char.position.z = 0.03;
       const glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.06, 16, 16),
-        new THREE.MeshBasicMaterial({
-          color: data.color,
-          transparent: true,
-          opacity: 0.4,
-          side: THREE.BackSide
-        })
+        new THREE.MeshBasicMaterial({ color: data.color, transparent: true, opacity: 0.4, side: THREE.BackSide })
       );
       glow.position.copy(char.position);
 
@@ -522,18 +444,11 @@
       eGeo.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
       const energy = new THREE.Points(
         eGeo,
-        new THREE.PointsMaterial({
-          color: data.color,
-          size: 0.005,
-          transparent: true,
-          opacity: 0.7,
-          sizeAttenuation: true
-        })
+        new THREE.PointsMaterial({ color: data.color, size: 0.005, transparent: true, opacity: 0.7, sizeAttenuation: true })
       );
       energy.position.copy(char.position);
 
       addCardLabels(grp, data);
-
       grp.add(base, border, char, glow, energy);
       grp.position.copy(pos);
       grp.userData = {
@@ -564,36 +479,18 @@
         ctx.fillText(text, w/2, h/2);
         return new THREE.CanvasTexture(c);
       }
-      const nameMat = new THREE.MeshBasicMaterial({
-        map: txtCanvas(data.name, 24, 128, 32),
-        transparent: true
-      });
-      const nameMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.15, 0.04),
-        nameMat
-      );
-      nameMesh.position.set(0, 0.12, 0.02);
+      const nameMat = new THREE.MeshBasicMaterial({ map: txtCanvas(data.name, 24,128,32), transparent: true });
+      const nameMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.04), nameMat);
+      nameMesh.position.set(0,0.12,0.02);
 
       const stats = `${data.type} | ATK:${data.attack}`;
-      const statsMat = new THREE.MeshBasicMaterial({
-        map: txtCanvas(stats, 16, 128, 24),
-        transparent: true
-      });
-      const statsMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.15, 0.03),
-        statsMat
-      );
-      statsMesh.position.set(0, -0.12, 0.02);
+      const statsMat = new THREE.MeshBasicMaterial({ map: txtCanvas(stats,16,128,24), transparent: true });
+      const statsMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.15,0.03), statsMat);
+      statsMesh.position.set(0,-0.12,0.02);
 
-      const specMat = new THREE.MeshBasicMaterial({
-        map: txtCanvas(data.special, 12, 128, 20),
-        transparent: true
-      });
-      const specMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.12, 0.025),
-        specMat
-      );
-      specMesh.position.set(0, -0.08, 0.02);
+      const specMat = new THREE.MeshBasicMaterial({ map: txtCanvas(data.special,12,128,20), transparent: true });
+      const specMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.12,0.025), specMat);
+      specMesh.position.set(0,-0.08,0.02);
 
       group.add(nameMesh, statsMesh, specMesh);
     }
@@ -601,7 +498,7 @@
     function createFloatingDeck() {
       cards.forEach(c => scene.remove(c));
       cards = [];
-      cardTypes.forEach((cData, i) => {
+      cardTypes.forEach((cData,i) => {
         const c = createCard(cData, deckPositions[i], true);
         scene.add(c);
         cards.push(c);
@@ -669,13 +566,7 @@
       const pos = new Float32Array(cnt*3);
       pos.fill(0);
       geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
-      const mat = new THREE.PointsMaterial({
-        color: colorHex,
-        size: 0.01,
-        transparent: true,
-        opacity: 0.8,
-        sizeAttenuation: true
-      });
+      const mat = new THREE.PointsMaterial({ color: colorHex, size: 0.01, transparent: true, opacity: 0.8, sizeAttenuation: true });
       const pts = new THREE.Points(geo, mat);
       pts.name = name;
       pts.visible = false;
@@ -714,8 +605,8 @@
     }
 
     function updateHPBars() {
-      const pPct = (playerHP / 100)*100;
-      const ePct = (enemyHP  / 100)*100;
+      const pPct = (playerHP / 100) * 100;
+      const ePct = (enemyHP  / 100) * 100;
       document.getElementById('player-hp').textContent = playerHP;
       document.getElementById('player-hp-bar').style.width = `${pPct}%`;
       document.getElementById('enemy-hp').textContent  = enemyHP;
@@ -808,7 +699,7 @@
         if (card.userData.energy) card.userData.energy.rotation.z += delta * 0.2;
       }
       if (selectedCard) animateCard(selectedCard);
-      if (enemyCard  ) animateCard(enemyCard);
+      if (enemyCard   ) animateCard(enemyCard);
       cards.forEach(c => animateCard(c));
     }
 
@@ -828,72 +719,6 @@
       rotateBattleArena(delta);
       renderer.render(scene, camera);
     }
-
-    async function startARSession() {
-      if (!navigator.xr) {
-        return showArNotSupported();
-      }
-      try {
-        const supported = await navigator.xr.isSessionSupported('immersive-ar');
-        if (!supported) throw new Error('immersive-ar not supported');
-        const session = await navigator.xr.requestSession('immersive-ar', {
-          // only optional features, so session will launch on any WebXR-capable browser
-          optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor'],
-          domOverlay: { root: document.body }
-        });
-        onSessionStarted(session);
-      } catch (err) {
-        console.error('AR session failed to start:', err);
-        showArNotSupported();
-      }
-    }
-
-    function onSessionStarted(session) {
-      renderer.xr.setReferenceSpaceType('local');
-      renderer.xr.setSession(session);
-
-      document.getElementById('overlay').style.display    = 'none';
-      document.getElementById('game-ui').style.display    = 'flex';
-      document.getElementById('game-info').style.display  = 'block';
-      document.getElementById('battle-log').style.display = 'block';
-      document.getElementById('card-deck').style.display  = 'flex';
-      document.getElementById('tutorial').style.display   = 'block';
-
-      controller = renderer.xr.getController(0);
-      controller.addEventListener('select', onSelect);
-      scene.add(controller);
-
-      createFloatingDeck();
-      xrSessionActive = true;
-      gamePhase = 'selection';
-      renderer.setAnimationLoop(render);
-
-      session.addEventListener('end', () => {
-        xrSessionActive = false;
-        document.getElementById('overlay').style.display    = 'block';
-        document.getElementById('game-ui').style.display    = 'none';
-        document.getElementById('game-info').style.display  = 'none';
-        document.getElementById('battle-log').style.display = 'none';
-        document.getElementById('card-deck').style.display  = 'none';
-        document.getElementById('tutorial').style.display   = 'none';
-      });
-    }
-
-    window.addEventListener('load', () => {
-      if ('xr' in navigator) {
-        navigator.xr.isSessionSupported('immersive-ar').then(supported => {
-          if (!supported) {
-            document.getElementById('start-button').disabled = true;
-            document.getElementById('start-button').textContent = 'AR Not Supported';
-            showArNotSupported();
-          }
-        });
-      } else {
-        document.getElementById('start-button').disabled = true;
-        document.getElementById('start-button').textContent = 'AR Not Supported';
-        showArNotSupported();
-      }
-    });
   </script>
 </body>
 </html>
