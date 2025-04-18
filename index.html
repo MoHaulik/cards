@@ -311,7 +311,6 @@
       document.getElementById('ar-not-supported').style.display = 'block';
     }
 
-    // Load the example FontLoader
     new FontLoader().load(
       'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
       f => { font = f; }
@@ -336,17 +335,14 @@
       renderer.outputEncoding = THREE.sRGBEncoding;
       document.body.appendChild(renderer.domElement);
 
-      // Lights
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.5));
       const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
-      // Arena
       battleArena = createBattleArena();
       scene.add(battleArena);
 
-      // UI handlers
       document.getElementById('start-button').addEventListener('click', startARSession);
       document.getElementById('attack-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(false); });
       document.getElementById('special-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(true); });
@@ -411,7 +407,6 @@
 
     function createBattleArena() {
       const grp = new THREE.Group();
-      // platform
       const plat = new THREE.Mesh(
         new THREE.CylinderGeometry(0.6, 0.65, 0.02, 32),
         new THREE.MeshStandardMaterial({
@@ -422,7 +417,6 @@
           roughness: 0.4
         })
       );
-      // ring
       const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.6, 0.01, 16, 64),
         new THREE.MeshBasicMaterial({
@@ -433,7 +427,6 @@
       );
       ring.rotation.x = Math.PI / 2;
       ring.position.y = 0.01;
-      // core pillar
       const core = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.6, 16),
         new THREE.MeshBasicMaterial({
@@ -443,7 +436,7 @@
         })
       );
       core.position.y = 0.3;
-      // ambient particles
+
       const pCount = 100;
       const pGeo = new THREE.BufferGeometry();
       const pPos = new Float32Array(pCount * 3);
@@ -475,7 +468,6 @@
 
     function createCard(data, pos, isPlayer) {
       const grp = new THREE.Group();
-      // card base
       const base = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, 0.3, 0.01),
         new THREE.MeshStandardMaterial({
@@ -486,7 +478,6 @@
           roughness: 0.7
         })
       );
-      // border glow
       const border = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.32, 0.005),
         new THREE.MeshStandardMaterial({
@@ -498,7 +489,6 @@
         })
       );
       border.position.z = -0.01;
-      // character sphere
       const char = new THREE.Mesh(
         new THREE.SphereGeometry(0.05, 16, 16),
         new THREE.MeshStandardMaterial({
@@ -510,7 +500,6 @@
         })
       );
       char.position.z = 0.03;
-      // glow halo
       const glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.06, 16, 16),
         new THREE.MeshBasicMaterial({
@@ -521,7 +510,7 @@
         })
       );
       glow.position.copy(char.position);
-      // floating energy particles
+
       const eCount = 30;
       const eGeo = new THREE.BufferGeometry();
       const ePos = new Float32Array(eCount * 3);
@@ -542,8 +531,9 @@
         })
       );
       energy.position.copy(char.position);
-      // add name/stats labels
+
       addCardLabels(grp, data);
+
       grp.add(base, border, char, glow, energy);
       grp.position.copy(pos);
       grp.userData = {
@@ -818,7 +808,7 @@
         if (card.userData.energy) card.userData.energy.rotation.z += delta * 0.2;
       }
       if (selectedCard) animateCard(selectedCard);
-      if (enemyCard   ) animateCard(enemyCard);
+      if (enemyCard  ) animateCard(enemyCard);
       cards.forEach(c => animateCard(c));
     }
 
@@ -847,8 +837,7 @@
         const supported = await navigator.xr.isSessionSupported('immersive-ar');
         if (!supported) throw new Error('immersive-ar not supported');
         const session = await navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['hit-test', 'local-floor'],
-          optionalFeatures: ['dom-overlay'],
+          optionalFeatures: ['dom-overlay', 'hit-test', 'local-floor'],
           domOverlay: { root: document.body }
         });
         onSessionStarted(session);
