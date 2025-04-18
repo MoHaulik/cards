@@ -227,7 +227,7 @@
   <div id="ar-not-supported">
     <h2>AR Not Supported</h2>
     <p>Your device or browser doesn't support WebXR AR. Try using an AR-capable mobile device with Chrome or Safari.</p>
-    <button onclick="this.parentElement.style.display='none';">Close</button>
+    <button onclick="document.getElementById('ar-not-supported').style.display='none'">Close</button>
   </div>
 
   <div id="game-ui">
@@ -271,17 +271,17 @@
 
   <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+    import { FontLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/FontLoader.js';
 
     let camera, scene, renderer, controller;
-    let clock = new THREE.Clock();
-    let cards = [], selectedCard = null, enemyCard = null;
+    let clock, cards = [], selectedCard = null, enemyCard = null;
     let playerCardData, enemyCardData;
     let playerHP = 100, enemyHP = 100;
     let currentTurn = 1, isPlayerTurn = true, gamePhase = 'selection';
     let playerAttackParticles, enemyAttackParticles;
     let battleArena, xrSessionActive = false;
     let font, damageTexts = [];
-    let raycaster = new THREE.Raycaster();
+    const raycaster = new THREE.Raycaster();
     let rotationSpeed = 0;
 
     const playerPosition = new THREE.Vector3(0, 0, -0.6);
@@ -307,15 +307,20 @@
       { name: 'Zapdos',  type: 'Electric', attack: 18, defense: 3,  special: 'Thunder Strike', specialDamage: 30, color: 0xffcc00, particleColor: 0xffff00 }
     ];
 
-    // Load font asynchronously
-    new THREE.FontLoader().load(
+    function showArNotSupported() {
+      document.getElementById('ar-not-supported').style.display = 'block';
+    }
+
+    // Load the example FontLoader
+    new FontLoader().load(
       'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_bold.typeface.json',
-      f => font = f
+      f => { font = f; }
     );
 
-    init();
+    window.addEventListener('DOMContentLoaded', init);
 
     function init() {
+      clock = new THREE.Clock();
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
@@ -333,7 +338,7 @@
 
       // Lights
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbbbbff, 0.5));
-      let dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
       dirLight.position.set(0, 5, 5);
       scene.add(dirLight);
 
@@ -343,8 +348,8 @@
 
       // UI handlers
       document.getElementById('start-button').addEventListener('click', startARSession);
-      document.getElementById('attack-button').addEventListener('click', performAttack);
-      document.getElementById('special-button').addEventListener('click', performSpecialAttack);
+      document.getElementById('attack-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(false); });
+      document.getElementById('special-button').addEventListener('click', () => { if (isPlayerTurn) doAttack(true); });
       document.getElementById('rotate-view').addEventListener('click', toggleRotation);
       document.getElementById('tutorial').addEventListener('click', () => {
         document.getElementById('tutorial').style.display = 'none';
@@ -357,7 +362,7 @@
     function createDeckPreview() {
       const deckEl = document.getElementById('card-deck');
       cardTypes.forEach((card, idx) => {
-        let preview = document.createElement('div');
+        const preview = document.createElement('div');
         preview.className = 'deck-preview';
         preview.dataset.index = idx;
         preview.innerHTML = `
@@ -370,22 +375,18 @@
     }
 
     function selectDeckCard(idx) {
-      // highlight selection
       document.querySelectorAll('.deck-preview').forEach(el => el.classList.remove('selected'));
-      let el = document.querySelector(`.deck-preview[data-index="${idx}"]`);
+      const el = document.querySelector(`.deck-preview[data-index="${idx}"]`);
       if (el) el.classList.add('selected');
 
-      // set player card data
       playerCardData = cardTypes[idx];
       document.getElementById('player-name').textContent = playerCardData.name;
       document.getElementById('player-type-icon').style.backgroundColor = `#${playerCardData.color.toString(16).padStart(6,'0')}`;
 
-      // add 3D card
       if (selectedCard) scene.remove(selectedCard);
       selectedCard = createCard(playerCardData, playerPosition, true);
       scene.add(selectedCard);
 
-      // choose random enemy card
       if (!enemyCard) {
         do {
           enemyCardData = cardTypes[Math.floor(Math.random() * cardTypes.length)];
@@ -396,7 +397,6 @@
         document.getElementById('enemy-type-icon').style.backgroundColor = `#${enemyCardData.color.toString(16).padStart(6,'0')}`;
       }
 
-      // clear floating deck
       cards.forEach(c => scene.remove(c));
       cards = [];
 
@@ -410,10 +410,9 @@
     }
 
     function createBattleArena() {
-      let grp = new THREE.Group();
-
+      const grp = new THREE.Group();
       // platform
-      let plat = new THREE.Mesh(
+      const plat = new THREE.Mesh(
         new THREE.CylinderGeometry(0.6, 0.65, 0.02, 32),
         new THREE.MeshStandardMaterial({
           color: 0x111133,
@@ -423,9 +422,8 @@
           roughness: 0.4
         })
       );
-
       // ring
-      let ring = new THREE.Mesh(
+      const ring = new THREE.Mesh(
         new THREE.TorusGeometry(0.6, 0.01, 16, 64),
         new THREE.MeshBasicMaterial({
           color: 0x00ffff,
@@ -435,9 +433,8 @@
       );
       ring.rotation.x = Math.PI / 2;
       ring.position.y = 0.01;
-
       // core pillar
-      let core = new THREE.Mesh(
+      const core = new THREE.Mesh(
         new THREE.CylinderGeometry(0.05, 0.05, 0.6, 16),
         new THREE.MeshBasicMaterial({
           color: 0x88ccff,
@@ -446,43 +443,40 @@
         })
       );
       core.position.y = 0.3;
-
       // ambient particles
-      let pCount = 100;
-      let pGeo = new THREE.BufferGeometry();
-      let pPos = new Float32Array(pCount * 3);
-      let pVel = [];
+      const pCount = 100;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(pCount * 3);
+      const pVel = [];
       for (let i = 0; i < pCount; i++) {
-        let r = 0.6 * Math.random();
-        let th = Math.random() * Math.PI * 2;
-        pPos[i * 3]     = r * Math.cos(th);
-        pPos[i * 3 + 1] = Math.random() * 0.8;
-        pPos[i * 3 + 2] = r * Math.sin(th);
+        const r = 0.6 * Math.random();
+        const th = Math.random() * Math.PI * 2;
+        pPos[i*3]     = r * Math.cos(th);
+        pPos[i*3 + 1] = Math.random() * 0.8;
+        pPos[i*3 + 2] = r * Math.sin(th);
         pVel.push({ y: 0.005 + Math.random() * 0.01, rot: Math.random() * 0.01 });
       }
       pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
-      let pMat = new THREE.PointsMaterial({
+      const pMat = new THREE.PointsMaterial({
         color: 0x88ccff,
         size: 0.01,
         transparent: true,
         opacity: 0.6,
         sizeAttenuation: true
       });
-      let particles = new THREE.Points(pGeo, pMat);
+      const particles = new THREE.Points(pGeo, pMat);
       particles.userData = { velocities: pVel };
 
       grp.add(plat, ring, core, particles);
       grp.userData.particles = particles;
       grp.position.set(0, -0.3, -1.0);
-
       return grp;
     }
 
     function createCard(data, pos, isPlayer) {
-      let grp = new THREE.Group();
-
+      const grp = new THREE.Group();
       // card base
-      let base = new THREE.Mesh(
+      const base = new THREE.Mesh(
         new THREE.BoxGeometry(0.2, 0.3, 0.01),
         new THREE.MeshStandardMaterial({
           color: data.color,
@@ -492,9 +486,8 @@
           roughness: 0.7
         })
       );
-
       // border glow
-      let border = new THREE.Mesh(
+      const border = new THREE.Mesh(
         new THREE.BoxGeometry(0.22, 0.32, 0.005),
         new THREE.MeshStandardMaterial({
           color: 0xffd700,
@@ -505,9 +498,8 @@
         })
       );
       border.position.z = -0.01;
-
       // character sphere
-      let char = new THREE.Mesh(
+      const char = new THREE.Mesh(
         new THREE.SphereGeometry(0.05, 16, 16),
         new THREE.MeshStandardMaterial({
           color: 0xffffff,
@@ -518,9 +510,8 @@
         })
       );
       char.position.z = 0.03;
-
       // glow halo
-      let glow = new THREE.Mesh(
+      const glow = new THREE.Mesh(
         new THREE.SphereGeometry(0.06, 16, 16),
         new THREE.MeshBasicMaterial({
           color: data.color,
@@ -530,18 +521,17 @@
         })
       );
       glow.position.copy(char.position);
-
       // floating energy particles
-      let eCount = 30;
-      let eGeo = new THREE.BufferGeometry();
-      let ePos = new Float32Array(eCount * 3);
+      const eCount = 30;
+      const eGeo = new THREE.BufferGeometry();
+      const ePos = new Float32Array(eCount * 3);
       for (let i = 0; i < eCount; i++) {
-        ePos[i * 3]     = (Math.random() - 0.5) * 0.05;
-        ePos[i * 3 + 1] = (Math.random() - 0.5) * 0.05;
-        ePos[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
+        ePos[i*3]     = (Math.random() - 0.5) * 0.05;
+        ePos[i*3 + 1] = (Math.random() - 0.5) * 0.05;
+        ePos[i*3 + 2] = (Math.random() - 0.5) * 0.05;
       }
       eGeo.setAttribute('position', new THREE.BufferAttribute(ePos, 3));
-      let energy = new THREE.Points(
+      const energy = new THREE.Points(
         eGeo,
         new THREE.PointsMaterial({
           color: data.color,
@@ -552,10 +542,8 @@
         })
       );
       energy.position.copy(char.position);
-
       // add name/stats labels
       addCardLabels(grp, data);
-
       grp.add(base, border, char, glow, energy);
       grp.position.copy(pos);
       grp.userData = {
@@ -574,45 +562,44 @@
 
     function addCardLabels(group, data) {
       function txtCanvas(text, fontSize, w, h) {
-        let c = document.createElement('canvas');
+        const c = document.createElement('canvas');
         c.width = w; c.height = h;
-        let ctx = c.getContext('2d');
+        const ctx = c.getContext('2d');
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 0, w, h);
         ctx.fillStyle = '#fff';
         ctx.font = `bold ${fontSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(text, w / 2, h / 2);
+        ctx.fillText(text, w/2, h/2);
         return new THREE.CanvasTexture(c);
       }
-
-      let nameMat = new THREE.MeshBasicMaterial({
+      const nameMat = new THREE.MeshBasicMaterial({
         map: txtCanvas(data.name, 24, 128, 32),
         transparent: true
       });
-      let nameMesh = new THREE.Mesh(
+      const nameMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(0.15, 0.04),
         nameMat
       );
       nameMesh.position.set(0, 0.12, 0.02);
 
-      let stats = `${data.type} | ATK:${data.attack}`;
-      let statsMat = new THREE.MeshBasicMaterial({
+      const stats = `${data.type} | ATK:${data.attack}`;
+      const statsMat = new THREE.MeshBasicMaterial({
         map: txtCanvas(stats, 16, 128, 24),
         transparent: true
       });
-      let statsMesh = new THREE.Mesh(
+      const statsMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(0.15, 0.03),
         statsMat
       );
       statsMesh.position.set(0, -0.12, 0.02);
 
-      let specMat = new THREE.MeshBasicMaterial({
+      const specMat = new THREE.MeshBasicMaterial({
         map: txtCanvas(data.special, 12, 128, 20),
         transparent: true
       });
-      let specMesh = new THREE.Mesh(
+      const specMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(0.12, 0.025),
         specMat
       );
@@ -625,23 +612,23 @@
       cards.forEach(c => scene.remove(c));
       cards = [];
       cardTypes.forEach((cData, i) => {
-        let c = createCard(cData, deckPositions[i], true);
+        const c = createCard(cData, deckPositions[i], true);
         scene.add(c);
         cards.push(c);
       });
     }
 
-    function onSelect(event) {
+    function onSelect() {
       if (gamePhase !== 'selection') return;
-      let tempMat = new THREE.Matrix4().identity().extractRotation(controller.matrixWorld);
+      const mat = new THREE.Matrix4().extractRotation(controller.matrixWorld);
       raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
-      raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMat);
-      let hits = raycaster.intersectObjects(scene.children, true);
-      for (let h of hits) {
-        let obj = h.object;
-        if (obj.userData && obj.userData.isCard) {
-          let grp = obj.userData.parentGroup;
-          let idx = cardTypes.findIndex(cd => cd.name === grp.userData.name);
+      raycaster.ray.direction.set(0,0,-1).applyMatrix4(mat);
+      const hits = raycaster.intersectObjects(scene.children, true);
+      for (const h of hits) {
+        const obj = h.object;
+        if (obj.userData.isCard) {
+          const grp = obj.userData.parentGroup;
+          const idx = cardTypes.findIndex(cd => cd.name === grp.userData.name);
           if (idx >= 0) selectDeckCard(idx);
           break;
         }
@@ -661,27 +648,19 @@
       logBattle('Battle start! Player\'s turn.');
     }
 
-    function performAttack() { if (isPlayerTurn) doAttack(false); }
-    function performSpecialAttack() { if (isPlayerTurn) doAttack(true); }
-
     function doAttack(isSpecial) {
-      let attacker = isPlayerTurn ? playerCardData : enemyCardData;
-      let defender = isPlayerTurn ? enemyCardData : playerCardData;
-      let base = isSpecial ? attacker.specialDamage : attacker.attack;
-      let mult = typeEffectiveness[attacker.type][defender.type] || 1;
-      let dmg = Math.round(base * mult);
+      const attacker = isPlayerTurn ? playerCardData : enemyCardData;
+      const defender = isPlayerTurn ? enemyCardData : playerCardData;
+      const base = isSpecial ? attacker.specialDamage : attacker.attack;
+      const mult = typeEffectiveness[attacker.type][defender.type] || 1;
+      const dmg = Math.round(base * mult);
 
       if (isPlayerTurn) enemyHP = Math.max(0, enemyHP - dmg);
       else playerHP = Math.max(0, playerHP - dmg);
 
       updateHPBars();
-      logBattle(
-        `${isPlayerTurn ? 'Player' : 'Enemy'} used ${
-          isSpecial ? attacker.special : 'Attack'
-        } for ${dmg} damage!`
-      );
-      showDamageText(isPlayerTurn ? enemyPosition : playerPosition, dmg);
-
+      logBattle(`${isPlayerTurn?'Player':'Enemy'} used ${isSpecial?attacker.special:'Attack'} for ${dmg} damage!`);
+      showDamageText(isPlayerTurn?enemyPosition:playerPosition, dmg);
       createAttackParticles();
       launchParticles(isPlayerTurn);
     }
@@ -689,28 +668,25 @@
     function createAttackParticles() {
       if (playerAttackParticles) scene.remove(playerAttackParticles);
       if (enemyAttackParticles) scene.remove(enemyAttackParticles);
-
       playerAttackParticles = makeParticles(playerCardData.particleColor, 'p1');
       enemyAttackParticles = makeParticles(enemyCardData.particleColor, 'p2');
       scene.add(playerAttackParticles, enemyAttackParticles);
     }
 
     function makeParticles(colorHex, name) {
-      let cnt = 50;
-      let geo = new THREE.BufferGeometry();
-      let pos = new Float32Array(cnt * 3);
-      for (let i = 0; i < cnt * 3; i++) pos[i] = 0;
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-
-      let mat = new THREE.PointsMaterial({
+      const cnt = 50;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(cnt*3);
+      pos.fill(0);
+      geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+      const mat = new THREE.PointsMaterial({
         color: colorHex,
         size: 0.01,
         transparent: true,
         opacity: 0.8,
         sizeAttenuation: true
       });
-
-      let pts = new THREE.Points(geo, mat);
+      const pts = new THREE.Points(geo, mat);
       pts.name = name;
       pts.visible = false;
       pts.userData = { start: 0, anim: false, vel: new THREE.Vector3(), dur: 0.6 };
@@ -718,12 +694,12 @@
     }
 
     function launchParticles(fromPlayer) {
-      let now = clock.getElapsedTime();
-      let pSys = fromPlayer ? playerAttackParticles : enemyAttackParticles;
-      let fromPos = fromPlayer ? playerPosition : enemyPosition;
-      let toPos   = fromPlayer ? enemyPosition  : playerPosition;
+      const now = clock.getElapsedTime();
+      const pSys = fromPlayer ? playerAttackParticles : enemyAttackParticles;
+      const fromPos = fromPlayer ? playerPosition : enemyPosition;
+      const toPos   = fromPlayer ? enemyPosition  : playerPosition;
       pSys.position.copy(fromPos);
-      let vel = new THREE.Vector3().subVectors(toPos, fromPos).divideScalar(pSys.userData.dur);
+      const vel = new THREE.Vector3().subVectors(toPos, fromPos).divideScalar(pSys.userData.dur);
       pSys.userData.vel.copy(vel);
       pSys.userData.start = now;
       pSys.userData.anim = true;
@@ -731,16 +707,16 @@
     }
 
     function showDamageText(pos, dmg) {
-      let canvas = document.createElement('canvas');
+      const canvas = document.createElement('canvas');
       canvas.width = 128; canvas.height = 64;
-      let ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d');
       ctx.fillStyle = 'red';
       ctx.font = 'bold 48px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`-${dmg}`, 64, 48);
-      let texture = new THREE.CanvasTexture(canvas);
-      let material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-      let sprite = new THREE.Sprite(material);
+      const texture = new THREE.CanvasTexture(canvas);
+      const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+      const sprite = new THREE.Sprite(material);
       sprite.position.copy(pos).add(new THREE.Vector3(0, 0.1, 0));
       sprite.scale.set(0.1, 0.05, 1);
       scene.add(sprite);
@@ -748,8 +724,8 @@
     }
 
     function updateHPBars() {
-      let pPct = (playerHP / 100) * 100;
-      let ePct = (enemyHP / 100)  * 100;
+      const pPct = (playerHP / 100)*100;
+      const ePct = (enemyHP  / 100)*100;
       document.getElementById('player-hp').textContent = playerHP;
       document.getElementById('player-hp-bar').style.width = `${pPct}%`;
       document.getElementById('enemy-hp').textContent  = enemyHP;
@@ -757,7 +733,7 @@
     }
 
     function logBattle(msg) {
-      let p = document.createElement('p');
+      const p = document.createElement('p');
       p.textContent = msg;
       document.getElementById('battle-log').appendChild(p);
       document.getElementById('battle-log').scrollTop = 1e9;
@@ -765,8 +741,7 @@
 
     function nextTurn() {
       if (playerHP === 0 || enemyHP === 0) {
-        let res = playerHP === 0 ? 'You Lose!' : 'You Win!';
-        logBattle(res);
+        logBattle(playerHP===0?'You Lose!':'You Win!');
         document.getElementById('attack-button').disabled  = true;
         document.getElementById('special-button').disabled = true;
         return;
@@ -776,11 +751,11 @@
         currentTurn++;
         document.getElementById('turn-counter').textContent = currentTurn;
       }
-      document.getElementById('turn-indicator').textContent = isPlayerTurn ? 'Player' : 'Enemy';
+      document.getElementById('turn-indicator').textContent = isPlayerTurn?'Player':'Enemy';
 
       if (!isPlayerTurn) {
         setTimeout(() => {
-          let aiMove = Math.random() > 0.7;
+          const aiMove = Math.random()>0.7;
           doAttack(aiMove);
         }, 800);
       }
@@ -794,7 +769,7 @@
 
     function animateParticles(sys, delta) {
       if (!sys || !sys.userData.anim) return;
-      let t = clock.getElapsedTime() - sys.userData.start;
+      const t = clock.getElapsedTime() - sys.userData.start;
       if (t > sys.userData.dur) {
         sys.visible = false;
         sys.userData.anim = false;
@@ -806,8 +781,8 @@
 
     function animateDamageTexts(delta) {
       for (let i = damageTexts.length - 1; i >= 0; i--) {
-        let dt = damageTexts[i];
-        let t  = clock.getElapsedTime() - dt.start;
+        const dt = damageTexts[i];
+        const t  = clock.getElapsedTime() - dt.start;
         if (t > dt.dur) {
           scene.remove(dt.mesh);
           damageTexts.splice(i, 1);
@@ -820,16 +795,13 @@
 
     function updateArenaParticles(delta) {
       if (!battleArena || !battleArena.userData.particles) return;
-      let particles = battleArena.userData.particles;
-      let positions = particles.geometry.attributes.position;
-      let vels = particles.userData.velocities;
+      const particles = battleArena.userData.particles;
+      const positions = particles.geometry.attributes.position;
+      const vels = particles.userData.velocities;
       for (let i = 0; i < positions.count; i++) {
         positions.array[i*3+1] += vels[i].y;
-        if (positions.array[i*3+1] > 0.8) {
-          positions.array[i*3+1] = 0;
-        }
-        let x = positions.array[i*3], z = positions.array[i*3+2];
-        let ang = vels[i].rot;
+        if (positions.array[i*3+1] > 0.8) positions.array[i*3+1] = 0;
+        const x = positions.array[i*3], z = positions.array[i*3+2], ang = vels[i].rot;
         positions.array[i*3]   = x * Math.cos(ang) - z * Math.sin(ang);
         positions.array[i*3+2] = x * Math.sin(ang) + z * Math.cos(ang);
       }
@@ -839,16 +811,14 @@
     function updateCardAnimations(delta) {
       function animateCard(card) {
         if (!card || !card.userData.float) return;
-        let fd = card.userData.float;
-        let time = clock.getElapsedTime();
-        card.position.y    = fd.startY + Math.sin(time * fd.speed) * 0.03;
-        card.rotation.y   += delta * fd.rotSpeed;
-        if (card.userData.energy) {
-          card.userData.energy.rotation.z += delta * 0.2;
-        }
+        const fd = card.userData.float;
+        const time = clock.getElapsedTime();
+        card.position.y  = fd.startY + Math.sin(time * fd.speed) * 0.03;
+        card.rotation.y += delta * fd.rotSpeed;
+        if (card.userData.energy) card.userData.energy.rotation.z += delta * 0.2;
       }
       if (selectedCard) animateCard(selectedCard);
-      if (enemyCard) animateCard(enemyCard);
+      if (enemyCard   ) animateCard(enemyCard);
       cards.forEach(c => animateCard(c));
     }
 
@@ -859,8 +829,7 @@
     }
 
     function render(timestamp, frame) {
-      let delta = clock.getDelta();
-      // AR frame handling would go here...
+      const delta = clock.getDelta();
       updateCardAnimations(delta);
       updateArenaParticles(delta);
       animateParticles(playerAttackParticles, delta);
@@ -870,39 +839,35 @@
       renderer.render(scene, camera);
     }
 
-    function startARSession() {
+    async function startARSession() {
       if (!navigator.xr) {
-        document.getElementById('ar-not-supported').style.display = 'block';
-        return;
+        return showArNotSupported();
       }
-      navigator.xr.isSessionSupported('immersive-ar').then(supported => {
-        if (supported) {
-          navigator.xr.requestSession('immersive-ar', {
-            requiredFeatures: ['hit-test', 'local-floor'],
-            optionalFeatures: ['dom-overlay'],
-            domOverlay: { root: document.body }
-          }).then(onSessionStarted)
-            .catch(err => {
-              console.error('Failed to start AR session:', err);
-              document.getElementById('ar-not-supported').style.display = 'block';
-            });
-        } else {
-          document.getElementById('ar-not-supported').style.display = 'block';
-        }
-      });
+      try {
+        const supported = await navigator.xr.isSessionSupported('immersive-ar');
+        if (!supported) throw new Error('immersive-ar not supported');
+        const session = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['hit-test', 'local-floor'],
+          optionalFeatures: ['dom-overlay'],
+          domOverlay: { root: document.body }
+        });
+        onSessionStarted(session);
+      } catch (err) {
+        console.error('AR session failed to start:', err);
+        showArNotSupported();
+      }
     }
 
     function onSessionStarted(session) {
       renderer.xr.setReferenceSpaceType('local');
       renderer.xr.setSession(session);
 
-      // show/hide UI elements
-      document.getElementById('overlay').style.display     = 'none';
-      document.getElementById('game-ui').style.display     = 'flex';
-      document.getElementById('game-info').style.display   = 'block';
-      document.getElementById('battle-log').style.display  = 'block';
-      document.getElementById('card-deck').style.display   = 'flex';
-      document.getElementById('tutorial').style.display    = 'block';
+      document.getElementById('overlay').style.display    = 'none';
+      document.getElementById('game-ui').style.display    = 'flex';
+      document.getElementById('game-info').style.display  = 'block';
+      document.getElementById('battle-log').style.display = 'block';
+      document.getElementById('card-deck').style.display  = 'flex';
+      document.getElementById('tutorial').style.display   = 'block';
 
       controller = renderer.xr.getController(0);
       controller.addEventListener('select', onSelect);
@@ -911,7 +876,7 @@
       createFloatingDeck();
       xrSessionActive = true;
       gamePhase = 'selection';
-      animate();
+      renderer.setAnimationLoop(render);
 
       session.addEventListener('end', () => {
         xrSessionActive = false;
@@ -924,21 +889,21 @@
       });
     }
 
-    window.onload = () => {
+    window.addEventListener('load', () => {
       if ('xr' in navigator) {
         navigator.xr.isSessionSupported('immersive-ar').then(supported => {
           if (!supported) {
             document.getElementById('start-button').disabled = true;
             document.getElementById('start-button').textContent = 'AR Not Supported';
-            document.getElementById('ar-not-supported').style.display = 'block';
+            showArNotSupported();
           }
         });
       } else {
         document.getElementById('start-button').disabled = true;
         document.getElementById('start-button').textContent = 'AR Not Supported';
-        document.getElementById('ar-not-supported').style.display = 'block';
+        showArNotSupported();
       }
-    };
+    });
   </script>
 </body>
 </html>
